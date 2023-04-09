@@ -1,6 +1,9 @@
 package com.macrometa.spark.writer
 
-import com.macrometa.spark.client.{ImportDataDTO, MacrometaClient}
+import akka.Done
+import com.macrometa.spark.client.MacrometaImport
+import com.macrometa.spark.client.ImportDataDTO
+import com.macrometa.spark.utils.InternalRowJsonConverter
 import io.circe.Json
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
@@ -8,45 +11,37 @@ import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 import org.apache.spark.sql.types._
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 
 class MacrometaDataWriter(options: Map[String, String], schema: StructType) extends DataWriter[InternalRow] with Logging {
 
+  private val converter = new InternalRowJsonConverter(schema)
   private val buffer = new ListBuffer[Json]()
-
-  val client = new MacrometaClient(federation = options("federation"),
-    apikey = options("apiKey"), fabric = options("fabric"))
+  private var insertManyFuture: Option[Future[Done]] = None
 
   override def write(record: InternalRow): Unit = {
-    val jsonDocument = internalRowToJson(record, schema)
+    val jsonDocument = converter.internalRowToJson(record)
     buffer += jsonDocument
   }
 
   override def commit(): WriterCommitMessage = {
+
     val data : ImportDataDTO = ImportDataDTO.apply(data = buffer, primaryKey = options.getOrElse("primaryKey",""))
-    client.insertManyV2(collection = options("collection"), body = data)
+    val client = new MacrometaImport(federation = options("federation"),
+      apikey = options("apiKey"), fabric = options("fabric"))
+    insertManyFuture = Some(client.insertMany(collection = options("collection"), body = data))
     buffer.clear()
     null
   }
 
   override def abort(): Unit = {}
 
-  override def close(): Unit = {}
-
-  def internalRowToJson(row: InternalRow, schema: StructType): Json = {
-    val jsonFields = schema.fields.zipWithIndex.map { case (field, index) =>
-
-      val fieldName = field.name
-      val fieldValue = field.dataType match {
-        case StringType => Json.fromString(row.getString(index))
-        case IntegerType => Json.fromInt(row.getInt(index))
-        case LongType => Json.fromLong(row.getLong(index))
-        case DoubleType => Json.fromDoubleOrNull(row.getDouble(index))
-        case BooleanType => Json.fromBoolean(row.getBoolean(index))
-        case _ => throw new UnsupportedOperationException(s"Unsupported data type: ${field.dataType}")
-      }
-      (fieldName, fieldValue)
-    }.toMap
-    Json.fromFields(jsonFields)
+  override def close(): Unit = {
+    insertManyFuture.foreach { future =>
+      val timeout = 5.minutes // Adjust the timeout as needed
+      Await.result(future, timeout)
+    }
   }
 }
 

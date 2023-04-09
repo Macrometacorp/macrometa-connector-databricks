@@ -1,6 +1,6 @@
 package com.macrometa.spark.reader
 
-import com.macrometa.spark.client.MacrometaClient
+import com.macrometa.spark.client.MacrometaCursor
 import io.circe.{Json, parser}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.PartitionReader
@@ -9,10 +9,10 @@ import org.apache.spark.unsafe.types.UTF8String
 
 class MacrometaCollectionPartitionReader(inputPartition: MacrometaCollectionPartition, options: Map[String, String], schema: StructType)   extends PartitionReader[InternalRow]{
 
-  val client = new MacrometaClient(federation = options("federation"),
+  val client = new MacrometaCursor(federation = options("federation"),
     apikey = options("apiKey"), fabric = options("fabric"))
 
-  val response: Json = client.cursor_start_request(batchSize =
+  val response: Json = client.executeQuery(batchSize =
     options("batchSize").toInt,
     collection = options("collection"), options.getOrElse("query", ""))
 

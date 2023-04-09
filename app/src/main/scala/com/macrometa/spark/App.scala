@@ -6,12 +6,12 @@ package com.macrometa.spark
 import org.apache.spark.sql.functions.rand
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
-object App {
-  def main(args: Array[String]): Unit = {
-    val apikey = "apikey TBHFGTw30RNa6dbixEn9Hcw.data.V6tTAkJgLbHS4nMFPJOr4qExXo22b8UhS9KhpGQdhH4k5F14l1BOVqsQuWkCLWbL784614"
-    val federation = "devsuccess.eng.macrometa.io"
+object App extends App {
+
+    val apikey = "apikey edgar.garcia_macrometa.com.key_3.4USrRlCToB4nsWvsTlCLSRfLvsXDlQvsMUvWli3ng8B5xKSSqu6DqnUQU63u2S1x1a65e6"
+    val federation = "support.eng.macrometa.io"
     val fabric = "_system"
-    val collection = "numbers2"
+    val collection = "collection_1"
     val batchSize = 10
     val query = s"FOR doc IN $collection RETURN doc"
 
@@ -39,16 +39,10 @@ object App {
     modifiedDF.write.format("macrometa").option("federation", federation)
       .option("apiKey", apikey)
       .option("fabric", fabric)
-      .option("collection", "sparkTestFromNumbers")
+      .option("collection", "collection_2")
       .option("primaryKey", "number")
       .mode(SaveMode.Append).save()
 
     spark.close()
 
-
-
-
-  }
-
-  def greeting(): String = "Hello, world!"
 }
