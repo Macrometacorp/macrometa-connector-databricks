@@ -14,9 +14,9 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 
-class MacrometaMicroBatchStream(options: CaseInsensitiveStringMap, schema: StructType) extends MicroBatchStream{
-  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(pulsarUrl = options.get("pulsarUrl"),
-                                                                        jwtToken = options.get("jwtToken")).getClient
+class MacrometaMicroBatchStream(options: CaseInsensitiveStringMap, schema: StructType) extends MicroBatchStream {
+  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("federation"),
+    port = options.getOrDefault("port",6651.toString), jwtToken = options.get("jwtToken")).getClient
 
   val consumer: Consumer[Array[Byte]] = client.newConsumer[Array[Byte]](PulsarSchema.BYTES).topic(options.get("topic")).
     subscriptionName(options.get("subscriptionName")).subscriptionType(SubscriptionType.Shared).subscribe()
@@ -67,6 +67,7 @@ class MacrometaMicroBatchStream(options: CaseInsensitiveStringMap, schema: Struc
     //client.close()
   }
 }
+
 case class MacrometaOffset(messageId: MessageIdImpl) extends Offset {
   override def json(): String = {
     messageId.toString

@@ -11,9 +11,10 @@ import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.unsafe.types.UTF8String
 
+
 class MacrometaStreamingDataWriter(options: Map[String, String], schema: StructType) extends DataWriter[InternalRow]{
-  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(pulsarUrl =
-    options.getOrElse("pulsarUrl", ""), jwtToken = options.getOrElse("jwtToken", "")).getClient
+  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation =
+    options.getOrElse("federation", ""),port = options.getOrElse("port",6651.toString), jwtToken = options.getOrElse("jwtToken", "")).getClient
 
   private val producer: Producer[Array[Byte]] = client.newProducer(PulsarSchema.BYTES).topic(options.getOrElse("topic","")).create()
 

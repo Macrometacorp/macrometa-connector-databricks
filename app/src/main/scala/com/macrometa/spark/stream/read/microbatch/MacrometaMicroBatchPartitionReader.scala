@@ -20,7 +20,8 @@ class MacrometaMicroBatchPartitionReader(options: Map[String, String], schema: S
   private val objectMapper = new ObjectMapper()
   private var currentMessage: Option[Message[Array[Byte]]] = None
 
-  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(pulsarUrl = options.getOrElse("pulsarurl",""), jwtToken = options.getOrElse("jwttoken","")).getClient
+  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.getOrElse("federation",""),
+    port = options.getOrElse("port",6651.toString), jwtToken = options.getOrElse("jwttoken","")).getClient
 
   val consumer: Consumer[Array[Byte]] = client.newConsumer[Array[Byte]](PulsarSchema.BYTES).topic(options.getOrElse("topic","")).
     subscriptionName("test-subs").subscriptionType(SubscriptionType.Shared).subscribe()

@@ -17,7 +17,8 @@ class MacrometaPulsarClientInstance private(pulsarUrl: String, jwtToken: String)
 object MacrometaPulsarClientInstance{
   @volatile private var instance: Option[MacrometaPulsarClientInstance] = None
 
-  def getInstance(pulsarUrl: String, jwtToken: String): MacrometaPulsarClientInstance = {
+  def getInstance(federation: String,port: String, jwtToken: String): MacrometaPulsarClientInstance = {
+    val pulsarUrl = s"pulsar+ssl://api-$federation:$port"
     instance match {
       case Some(client) => client
       case None =>

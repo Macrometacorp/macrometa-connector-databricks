@@ -8,13 +8,14 @@ import org.apache.spark.sql.SparkSession
 
 object StreamTest extends App {
 
-    val serviceUrl = "pulsar+ssl://api-support.eng.macrometa.io:6651"
-    val authToken =  ""
+    val federation = "support.eng.macrometa.io"
+    val port = "6651"
+    val authToken =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjEuNjgxMTAzMDk4ODUyMDU1ZSs2LCJoYXNoIjo0NzU0OTEyNzM3NzA1NDI5ODEzLCJleHAiOjE2ODExNDYyOTgsImlzcyI6Im1hY3JvbWV0YSIsInByZWZlcnJlZF91c2VybmFtZSI6InJvb3QiLCJzdWIiOiJlZGdhci5nYXJjaWFfbWFjcm9tZXRhLmNvbSIsInRlbmFudCI6ImVkZ2FyLmdhcmNpYV9tYWNyb21ldGEuY29tIn0=.RYnAAfCK0BN2fuFo7h7lEsLG0wvFGl1xA6IF0FHn9QQ="
     val topic = "persistent://edgar.garcia_macrometa.com/c8global._system/c8globals.CryptoTraderQuotesAvgUSD"
     val subscription = "test-subscription-123"
 
     val options = Map(
-      "pulsarUrl" -> serviceUrl,
+      "federation" -> federation,
       "jwtToken" -> authToken,
       "topic" -> topic,
       "subscriptionName" -> subscription
@@ -34,7 +35,8 @@ object StreamTest extends App {
     val topic_2 = "persistent://edgar.garcia_macrometa.com/c8global._system/c8globals.DataReceivedFromSpark"
     val subscription_2 = "test-subscription-10"
     val options_2 = Map(
-      "pulsarUrl" -> serviceUrl,
+      "federation" -> federation,
+      "port" -> port,
       "jwtToken" -> authToken,
       "topic" -> topic_2,
       "subscriptionName" -> subscription_2,
@@ -43,7 +45,7 @@ object StreamTest extends App {
 
     val query = inputStream.select("symbol","ma").withColumnRenamed("ma", "value").writeStream
       .format("com.macrometa.spark.stream.MacrometaTableProvider")
-      .options(options_2) // Set to "false" to avoid truncating output if the columns are too wide
+      .options(options_2)
       .start()
 
 
