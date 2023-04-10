@@ -27,6 +27,7 @@ shadowJar {
     //relocate 'io.circe', 'shaded.io.circe'
 
 
+
     manifest {
         attributes 'Main-Class': 'com.macrometa.spark.App'
     }
@@ -40,26 +41,25 @@ dependencies {
     def scalaVersion = '2.12.14'
     def AkkaVersion = '2.6.16'
     def AkkaHttpVersion = '10.2.6'
-    def circeVersion = '0.14.1'
+    def circeVersion = '0.14.0-M1'
     def sparkVersion = '3.3.0'
     def slf4jVersion = '1.7.32'
     def log4jVersion = '2.14.1'
 
     def shapelessVersion = '2.3.3' // Set the Shapeless version
     implementation "com.chuusai:shapeless_2.12:$shapelessVersion"
-
     implementation "org.scala-lang:scala-library:$scalaVersion"
 
     implementation("org.apache.spark:spark-sql_2.12:$sparkVersion") {
         exclude group: 'log4j'
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-        exclude group: 'io.circe'
     }
     implementation 'com.typesafe:config:1.2.1'
     implementation "com.typesafe.akka:akka-actor-typed_2.12:$AkkaVersion"
     implementation "com.typesafe.akka:akka-stream_2.12:$AkkaVersion"
     implementation "com.typesafe.akka:akka-http_2.12:$AkkaHttpVersion"
-    implementation "io.circe:circe-core_2.12:$circeVersion"
+    implementation ("io.circe:circe-core_2.12:$circeVersion")
+    implementation 'org.typelevel:cats-kernel_2.12:2.1.1'
     implementation "io.circe:circe-generic_2.12:$circeVersion"
     implementation "io.circe:circe-parser_2.12:$circeVersion"
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
@@ -67,6 +67,15 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-core:$log4jVersion"
     implementation "org.apache.logging.log4j:log4j-1.2-api:$log4jVersion"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
+    implementation "org.apache.pulsar:pulsar-client:2.9.1"
+
+
+
+
+
+
+
+
 
     // Add the following test dependencies
     testImplementation group: 'org.scalatest', name: 'scalatest_2.12', version: '3.2.9'
