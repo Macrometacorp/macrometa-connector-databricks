@@ -1,6 +1,7 @@
 package com.macrometa.spark.stream.read.microbatch
 
 import com.macrometa.spark.stream.pulsar.MacrometaPulsarClientInstance
+import com.macrometa.spark.stream.pulsar.macrometa_utils.MacrometaUtils
 import com.macrometa.spark.stream.read.MacrometaInputPartition
 import io.circe._
 import io.circe.generic.auto._
@@ -17,8 +18,8 @@ import scala.collection.JavaConverters.mapAsScalaMapConverter
 class MacrometaMicroBatchStream(options: CaseInsensitiveStringMap, schema: StructType) extends MicroBatchStream {
   val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("federation"),
     port = options.getOrDefault("port",6651.toString), jwtToken = options.get("jwtToken")).getClient
-
-  val consumer: Consumer[Array[Byte]] = client.newConsumer[Array[Byte]](PulsarSchema.BYTES).topic(options.get("topic")).
+  val topic: String = new MacrometaUtils().createTopic(options)
+  val consumer: Consumer[Array[Byte]] = client.newConsumer[Array[Byte]](PulsarSchema.BYTES).topic(topic).
     subscriptionName(options.get("subscriptionName")).subscriptionType(SubscriptionType.Shared).subscribe()
   @volatile private var lastAckedMessageId: Option[MessageId] = None
 

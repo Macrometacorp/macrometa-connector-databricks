@@ -8,49 +8,57 @@ import org.apache.spark.sql.SparkSession
 
 object StreamTest extends App {
 
-    val federation = "support.eng.macrometa.io"
-    val port = "6651"
-    val authToken =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjEuNjgxMTAzMDk4ODUyMDU1ZSs2LCJoYXNoIjo0NzU0OTEyNzM3NzA1NDI5ODEzLCJleHAiOjE2ODExNDYyOTgsImlzcyI6Im1hY3JvbWV0YSIsInByZWZlcnJlZF91c2VybmFtZSI6InJvb3QiLCJzdWIiOiJlZGdhci5nYXJjaWFfbWFjcm9tZXRhLmNvbSIsInRlbmFudCI6ImVkZ2FyLmdhcmNpYV9tYWNyb21ldGEuY29tIn0=.RYnAAfCK0BN2fuFo7h7lEsLG0wvFGl1xA6IF0FHn9QQ="
-    val topic = "persistent://edgar.garcia_macrometa.com/c8global._system/c8globals.CryptoTraderQuotesAvgUSD"
-    val subscription = "test-subscription-123"
+  val federation = "support.eng.macrometa.io"
+  val port = "6651"
+  val fabric = "_system"
+  val tenant = "edgar.garcia_macrometa.com"
+  val replication = "global"
+  val stream1 = "CryptoTraderQuotesAvgUSD"
+  val authToken =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjEuNjgxMTAzMDk4ODUyMDU1ZSs2LCJoYXNoIjo0NzU0OTEyNzM3NzA1NDI5ODEzLCJleHAiOjE2ODExNDYyOTgsImlzcyI6Im1hY3JvbWV0YSIsInByZWZlcnJlZF91c2VybmFtZSI6InJvb3QiLCJzdWIiOiJlZGdhci5nYXJjaWFfbWFjcm9tZXRhLmNvbSIsInRlbmFudCI6ImVkZ2FyLmdhcmNpYV9tYWNyb21ldGEuY29tIn0=.RYnAAfCK0BN2fuFo7h7lEsLG0wvFGl1xA6IF0FHn9QQ="
+  val subscription = "test-subscription-123"
 
-    val options = Map(
-      "federation" -> federation,
-      "jwtToken" -> authToken,
-      "topic" -> topic,
-      "subscriptionName" -> subscription
-    )
-
-
-    val spark = SparkSession.builder().appName("MacrometaStreamingApp")
-      .master("local[*]")
-      .getOrCreate()
-
-    val inputStream = spark.readStream
-      .format("com.macrometa.spark.stream.MacrometaTableProvider")
-      .options(options)
-      .load()
+  val options = Map(
+    "federation" -> federation,
+    "jwtToken" -> authToken,
+    "fabric" -> fabric,
+    "tenant" -> tenant,
+    "replication" -> replication,
+    "stream" -> stream1,
+    "subscriptionName" -> subscription
+  )
 
 
-    val topic_2 = "persistent://edgar.garcia_macrometa.com/c8global._system/c8globals.DataReceivedFromSpark"
-    val subscription_2 = "test-subscription-10"
-    val options_2 = Map(
-      "federation" -> federation,
-      "port" -> port,
-      "jwtToken" -> authToken,
-      "topic" -> topic_2,
-      "subscriptionName" -> subscription_2,
-      "checkpointLocation" -> "checkpoint"
-    )
+  val spark = SparkSession.builder().appName("MacrometaStreamingApp")
+    .master("local[*]")
+    .getOrCreate()
 
-    val query = inputStream.select("symbol","ma").withColumnRenamed("ma", "value").writeStream
-      .format("com.macrometa.spark.stream.MacrometaTableProvider")
-      .options(options_2)
-      .start()
+  val inputStream = spark.readStream
+    .format("com.macrometa.spark.stream.MacrometaTableProvider")
+    .options(options)
+    .load()
 
 
+  val subscription_2 = "test-subscription-10"
+  val options_2 = Map(
+    "federation" -> federation,
+    "port" -> port,
+    "jwtToken" -> authToken,
+    "fabric" -> fabric,
+    "tenant" -> tenant,
+    "replication" -> replication,
+    "stream" -> "DataReceivedFromSpark",
+    "subscriptionName" -> subscription_2,
+    "checkpointLocation" -> "checkpoint"
+  )
 
-    query.awaitTermination()
+  val query = inputStream.select("symbol","ma").withColumnRenamed("ma", "value").writeStream
+    .format("com.macrometa.spark.stream.MacrometaTableProvider")
+    .options(options_2)
+    .start()
+
+
+
+  query.awaitTermination()
   query.stop()
 
 }

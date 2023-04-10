@@ -1,6 +1,7 @@
 package com.macrometa.spark.stream.write
 
 import com.macrometa.spark.stream.pulsar.MacrometaPulsarClientInstance
+import com.macrometa.spark.stream.pulsar.macrometa_utils.MacrometaUtils
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
 import org.apache.pulsar.client.api.{Producer, PulsarClient, Schema => PulsarSchema}
@@ -16,7 +17,8 @@ class MacrometaStreamingDataWriter(options: Map[String, String], schema: StructT
   val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation =
     options.getOrElse("federation", ""),port = options.getOrElse("port",6651.toString), jwtToken = options.getOrElse("jwtToken", "")).getClient
 
-  private val producer: Producer[Array[Byte]] = client.newProducer(PulsarSchema.BYTES).topic(options.getOrElse("topic","")).create()
+  val topic: String = new MacrometaUtils().createTopic(options)
+  private val producer: Producer[Array[Byte]] = client.newProducer(PulsarSchema.BYTES).topic(topic).create()
 
   override def write(record: InternalRow): Unit = {
     // Convert the InternalRow to a regular Row with the schema

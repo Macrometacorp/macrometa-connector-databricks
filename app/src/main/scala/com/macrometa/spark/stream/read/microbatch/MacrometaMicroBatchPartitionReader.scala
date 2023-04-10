@@ -1,6 +1,7 @@
 package com.macrometa.spark.stream.read.microbatch
 
 import com.macrometa.spark.stream.pulsar.MacrometaPulsarClientInstance
+import com.macrometa.spark.stream.pulsar.macrometa_utils.MacrometaUtils
 import com.macrometa.spark.stream.read.MacrometaInputPartition
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.encoders.RowEncoder
@@ -23,7 +24,8 @@ class MacrometaMicroBatchPartitionReader(options: Map[String, String], schema: S
   val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.getOrElse("federation",""),
     port = options.getOrElse("port",6651.toString), jwtToken = options.getOrElse("jwttoken","")).getClient
 
-  val consumer: Consumer[Array[Byte]] = client.newConsumer[Array[Byte]](PulsarSchema.BYTES).topic(options.getOrElse("topic","")).
+  val topic: String = new MacrometaUtils().createTopic(options)
+  val consumer: Consumer[Array[Byte]] = client.newConsumer[Array[Byte]](PulsarSchema.BYTES).topic(topic).
     subscriptionName("test-subs").subscriptionType(SubscriptionType.Shared).subscribe()
 
   override def next(): Boolean = {

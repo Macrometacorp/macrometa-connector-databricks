@@ -1,6 +1,7 @@
 package com.macrometa.spark.stream
 
 import com.macrometa.spark.stream.pulsar.MacrometaPulsarClientInstance
+import com.macrometa.spark.stream.pulsar.macrometa_utils.MacrometaUtils
 import org.apache.pulsar.client.api.{PulsarClient, SubscriptionType, Schema => PulsarSchema}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.connector.catalog.{Table, TableProvider}
@@ -23,8 +24,8 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister{
   override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
     val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("federation"),
       port = options.getOrDefault("port",6651.toString), jwtToken = options.get("jwtToken")).getClient
-
-    val consumer = client.newConsumer(PulsarSchema.BYTES).topic(options.get("topic")).subscriptionName(options.get("subscriptionName")).subscriptionType(SubscriptionType.Shared).subscribe()
+    val topic = new MacrometaUtils().createTopic(options)
+    val consumer = client.newConsumer(PulsarSchema.BYTES).topic(topic).subscriptionName(options.get("subscriptionName")).subscriptionType(SubscriptionType.Shared).subscribe()
 
     val messageOpt: Option[Array[Byte]] = Try(consumer.receive()).toOption.map(_.getValue)
 
