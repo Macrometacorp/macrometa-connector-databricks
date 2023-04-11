@@ -9,12 +9,12 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 object CollectionTest extends App {
 
     val apikey = "apikey "
-    val federation = "support.eng.macrometa.io"
+    val federation = "*.macrometa.io"
     val fabric = "_system"
-    val sourceCollection = "collection_1"
+    val sourceCollection = "<SOURCE_SAMPLE_COLLECTION_NAME>"
     val batchSize = 10
     val query = s"FOR doc IN $sourceCollection RETURN doc"
-    val targetCollection = "collection_2"
+    val targetCollection = "<TARGET_SAMPLE_COLLECTION_NAME>"
     val primaryKey = "number"
 
 
