@@ -14,30 +14,42 @@ object CollectionTest extends App {
     val sourceCollection = "collection_1"
     val batchSize = 10
     val query = s"FOR doc IN $sourceCollection RETURN doc"
+    val targetCollection = "collection_2"
+    val primaryKey = "number"
+
 
     val spark = SparkSession.builder().master("local[*]").getOrCreate()
 
+    val sourceOptions = Map(
+        "federation" -> federation,
+        "apiKey" ->  apikey,
+        "fabric" ->  fabric,
+        "collection" -> sourceCollection,
+        "batchSize" -> batchSize.toString,
+        "query"-> query
+    )
+
     val inputDF = spark.read
       .format("com.macrometa.spark.collection.MacrometaTableProvider")
-      .option("federation", federation)
-      .option("apiKey", apikey)
-      .option("fabric", fabric)
-      .option("collection", sourceCollection)
-      .option("batchSize", batchSize)
-      .option("query", query)
+      .options(sourceOptions)
       .load()
+
     inputDF.show()
 
     val modifiedDF = inputDF.select("value").withColumnRenamed("value", "number").
       withColumn("randomNumber", rand())
 
-    val targetCollection = "collection_2"
+    val targetOptions = Map(
+        "federation" -> federation,
+        "apiKey" -> apikey,
+        "fabric" -> fabric,
+        "collection" -> targetCollection,
+        "batchSize" -> batchSize.toString,
+        "primaryKey" -> primaryKey
+    )
+
     modifiedDF.write.format("com.macrometa.spark.collection.MacrometaTableProvider")
-      .option("federation", federation)
-      .option("apiKey", apikey)
-      .option("fabric", fabric)
-      .option("collection", targetCollection)
-      .option("primaryKey", "number")
+      .options(targetOptions)
       .mode(SaveMode.Append).save()
 
     spark.close()

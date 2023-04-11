@@ -1,10 +1,10 @@
 # Macrometa Spark Streaming Connector for Databricks
 
-The Macrometa Spark Streaming Connector allows you to integrate [Apache Spark](https://spark.apache.org/) with [Macrometa](https://www.macrometa.com/) streams, making it easy to process and analyze real-time data using Spark's powerful capabilities in a Databricks environment.
+The Macrometa Spark Streaming Connector allows you to integrate [Apache Spark](https://spark.apache.org/) with [Macrometa](https://www.macrometa.com/docs/streams/) streams, making it easy to process and analyze real-time data using Spark's powerful capabilities in a Databricks environment.
 
 ## Requirements
 
-- Databricks Runtime 11.3 LTS or later (with Apache Spark 3.3.0)
+- Databricks Runtime 11.3 LTS(with Apache Spark 3.3.0)
 - Scala 2.12 or later
 - Macrometa account with access to streams
 
@@ -55,9 +55,10 @@ val targetOptions = Map(
   "checkpointLocation" -> "<CHECKPOINT_LOCATION>"
 )
 ```
-2. Write to the Macrometa stream:
+2. Write to the Macrometa stream (Assuming the stream you are reading data from has the property 'symbol', 'ma'. Replace with your own schema:
 ```scala
-val query = inputStream.select("column1", "column2")
+  val query = inputStream.select("symbol","ma")
+  .withColumnRenamed("ma", "value")
   .writeStream
   .format("com.macrometa.spark.stream.MacrometaTableProvider")
   .options(targetOptions)
