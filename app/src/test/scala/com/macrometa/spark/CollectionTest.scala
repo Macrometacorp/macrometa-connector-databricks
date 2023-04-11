@@ -11,10 +11,10 @@ object CollectionTest extends App {
     val apikey = "apikey "
     val federation = "*.macrometa.io"
     val fabric = "_system"
-    val sourceCollection = "<SOURCE_SAMPLE_COLLECTION_NAME>"
+    val sourceCollection = "<YOUR_SOURCE_COLLECTION>"
     val batchSize = 10
     val query = s"FOR doc IN $sourceCollection RETURN doc"
-    val targetCollection = "<TARGET_SAMPLE_COLLECTION_NAME>"
+    val targetCollection = "<YOUR_TARGET_COLLECTION>"
     val primaryKey = "number"
 
 

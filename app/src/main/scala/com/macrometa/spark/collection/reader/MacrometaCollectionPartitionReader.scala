@@ -13,7 +13,7 @@ class MacrometaCollectionPartitionReader(inputPartition: MacrometaCollectionPart
     apikey = options("apiKey"), fabric = options("fabric"))
 
   val response: Json = client.executeQuery(batchSize =
-    options("batchSize").toInt,
+    options.getOrElse("batchSize",100.toString).toInt,
     collection = options("collection"), options.getOrElse("query", ""))
 
   private val dataIterator : Iterator[InternalRow] = jsonToInternalRowIterator(response.toString(), schema)
