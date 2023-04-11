@@ -63,7 +63,7 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String){
     val timeout = 10.seconds
     val res = Await.ready(response.flatMap(res => res.entity.toStrict(timeout)).map(entity => entity.data.utf8String), timeout)
     val obj = parser.parse(res.value.get.get)
-    val json: Json = obj.getOrElse(null)  //complete cursor
+    val json: Json = obj.getOrElse(null)
 
     var listOfDocuments: Json = json.asObject.get("result").get
 

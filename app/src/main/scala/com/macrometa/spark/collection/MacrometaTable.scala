@@ -20,11 +20,7 @@ class MacrometaTable(schema: StructType, partitioning: Array[Transform], propert
   override def capabilities(): util.Set[TableCapability] = Set(
     TableCapability.BATCH_READ,
     TableCapability.BATCH_WRITE,
-    //    TableCapability.STREAMING_WRITE,
     TableCapability.ACCEPT_ANY_SCHEMA,
-    //TableCapability.TRUNCATE
-    //    TableCapability.OVERWRITE_BY_FILTER,
-    //    TableCapability.OVERWRITE_DYNAMIC,
   ).asJava
 
   override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = new MacrometaScanBuilder(options, schema)

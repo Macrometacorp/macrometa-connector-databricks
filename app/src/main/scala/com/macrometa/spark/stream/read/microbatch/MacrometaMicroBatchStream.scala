@@ -65,7 +65,6 @@ class MacrometaMicroBatchStream(options: CaseInsensitiveStringMap, schema: Struc
 
   override def stop(): Unit = {
     consumer.close()
-    //client.close()
   }
 }
 

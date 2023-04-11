@@ -13,18 +13,18 @@ object StreamTest extends App {
   val fabric = "_system"
   val tenant = "edgar.garcia_macrometa.com"
   val replication = "global"
-  val stream1 = "CryptoTraderQuotesAvgUSD"
-  val authToken =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjEuNjgxMTAzMDk4ODUyMDU1ZSs2LCJoYXNoIjo0NzU0OTEyNzM3NzA1NDI5ODEzLCJleHAiOjE2ODExNDYyOTgsImlzcyI6Im1hY3JvbWV0YSIsInByZWZlcnJlZF91c2VybmFtZSI6InJvb3QiLCJzdWIiOiJlZGdhci5nYXJjaWFfbWFjcm9tZXRhLmNvbSIsInRlbmFudCI6ImVkZ2FyLmdhcmNpYV9tYWNyb21ldGEuY29tIn0=.RYnAAfCK0BN2fuFo7h7lEsLG0wvFGl1xA6IF0FHn9QQ="
-  val subscription = "test-subscription-123"
+  val sourceStream = "CryptoTraderQuotesAvgUSD"
+  val authToken =  ""
+  val sourceSubscription = "test-subscription-123"
 
-  val options = Map(
+  val sourceOptions = Map(
     "federation" -> federation,
     "jwtToken" -> authToken,
     "fabric" -> fabric,
     "tenant" -> tenant,
     "replication" -> replication,
-    "stream" -> stream1,
-    "subscriptionName" -> subscription
+    "stream" -> sourceStream,
+    "subscriptionName" -> sourceSubscription
   )
 
 
@@ -34,26 +34,27 @@ object StreamTest extends App {
 
   val inputStream = spark.readStream
     .format("com.macrometa.spark.stream.MacrometaTableProvider")
-    .options(options)
+    .options(sourceOptions)
     .load()
 
 
-  val subscription_2 = "test-subscription-10"
-  val options_2 = Map(
+  val targetSubscription = "test-subscription-10"
+  val targetStream = "DataReceivedFromSpark"
+  val targetOptions = Map(
     "federation" -> federation,
     "port" -> port,
     "jwtToken" -> authToken,
     "fabric" -> fabric,
     "tenant" -> tenant,
     "replication" -> replication,
-    "stream" -> "DataReceivedFromSpark",
-    "subscriptionName" -> subscription_2,
+    "stream" -> targetStream,
+    "subscriptionName" -> targetSubscription,
     "checkpointLocation" -> "checkpoint"
   )
 
   val query = inputStream.select("symbol","ma").withColumnRenamed("ma", "value").writeStream
     .format("com.macrometa.spark.stream.MacrometaTableProvider")
-    .options(options_2)
+    .options(targetOptions)
     .start()
 
 

@@ -17,7 +17,6 @@ object CollectionTest extends App {
 
     val spark = SparkSession.builder().master("local[*]").getOrCreate()
 
-    //This part is to read from the collection named numbers
     val inputDF = spark.read
       .format("com.macrometa.spark.collection.MacrometaTableProvider")
       .option("federation", federation)
@@ -32,11 +31,8 @@ object CollectionTest extends App {
     val modifiedDF = inputDF.select("value").withColumnRenamed("value", "number").
       withColumn("randomNumber", rand())
 
-    // Performing Write operation to the collection 'sparkTestFromNumbers,
-    // assigning number column as primary key
-
-
-    modifiedDF.write.format("com.macrometa.spark.collection.MacrometaTableProvider").option("federation", federation)
+    modifiedDF.write.format("com.macrometa.spark.collection.MacrometaTableProvider")
+      .option("federation", federation)
       .option("apiKey", apikey)
       .option("fabric", fabric)
       .option("collection", "collection_2")
