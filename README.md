@@ -1,8 +1,10 @@
 # Macrometa Databricks Connector
 
-The Macrometa Spark Connector for Databricks is a versatile and efficient integration tool that enables users to seamlessly connect Macrometa's real-time data streams and collections with Apache Spark within the Databricks environment. This comprehensive connector facilitates the ingestion, processing, and analysis of both streaming and batch data by leveraging Spark's advanced capabilities, allowing users to derive valuable insights and make data-driven decisions.
+The Macrometa Spark Connector for [Databricks](https://www.databricks.com/) is a versatile and efficient integration tool that enables users to seamlessly connect Macrometa's real-time data [streams](https://www.macrometa.com/docs/streams/) and [collections](https://www.macrometa.com/docs/collections/) with Apache Spark within the Databricks environment. This comprehensive connector facilitates the ingestion, processing, and analysis of both streaming and batch data by leveraging Spark's advanced capabilities, allowing users to derive valuable insights and make data-driven decisions.
 
-With its simple installation process and compatibility with Databricks Runtime and Scala, the Macrometa Spark Connector offers two main components: a Streaming Data Connector and a Collection Data Connector. The Streaming Data Connector handles real-time data streams, while the Collection Data Connector focuses on batch data processing from Macrometa collections. 
+With its simple installation process and compatibility with Databricks Runtime and Scala, the Macrometa Spark Connector offers two main components: a Streaming Data Connector and a Collection Data Connector. 
+
+The Streaming Data Connector handles real-time data streams, while the Collection Data Connector focuses on batch data processing from Macrometa collections. 
 
 1. Source and Target operations for collections can be executed using the format `com.macrometa.spark.collection.MacrometaTableProvider`
 2. Source and Target operations for streams can be executed using the format `com.macrometa.spark.stream.MacrometaTableProvider`
