@@ -11,9 +11,9 @@ object CollectionTest extends App {
     val apikey = "apikey "
     val federation = "support.eng.macrometa.io"
     val fabric = "_system"
-    val collection = "collection_1"
+    val sourceCollection = "collection_1"
     val batchSize = 10
-    val query = s"FOR doc IN $collection RETURN doc"
+    val query = s"FOR doc IN $sourceCollection RETURN doc"
 
     val spark = SparkSession.builder().master("local[*]").getOrCreate()
 
@@ -22,7 +22,7 @@ object CollectionTest extends App {
       .option("federation", federation)
       .option("apiKey", apikey)
       .option("fabric", fabric)
-      .option("collection", collection)
+      .option("collection", sourceCollection)
       .option("batchSize", batchSize)
       .option("query", query)
       .load()
@@ -31,11 +31,12 @@ object CollectionTest extends App {
     val modifiedDF = inputDF.select("value").withColumnRenamed("value", "number").
       withColumn("randomNumber", rand())
 
+    val targetCollection = "collection_2"
     modifiedDF.write.format("com.macrometa.spark.collection.MacrometaTableProvider")
       .option("federation", federation)
       .option("apiKey", apikey)
       .option("fabric", fabric)
-      .option("collection", "collection_2")
+      .option("collection", targetCollection)
       .option("primaryKey", "number")
       .mode(SaveMode.Append).save()
 
