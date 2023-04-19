@@ -9,7 +9,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 object CollectionTest extends App {
 
     val apikey = "apikey "
-    val federation = "*.macrometa.io"
+    val regionUrl = "*.macrometa.io"
     val fabric = "_system"
     val sourceCollection = "<YOUR_SOURCE_COLLECTION>"
     val batchSize = 10
@@ -21,7 +21,7 @@ object CollectionTest extends App {
     val spark = SparkSession.builder().master("local[*]").getOrCreate()
 
     val sourceOptions = Map(
-        "federation" -> federation,
+        "regionUrl" -> regionUrl,
         "apiKey" ->  apikey,
         "fabric" ->  fabric,
         "collection" -> sourceCollection,
@@ -40,7 +40,7 @@ object CollectionTest extends App {
       withColumn("randomNumber", rand())
 
     val targetOptions = Map(
-        "federation" -> federation,
+        "regionUrl" -> regionUrl,
         "apiKey" -> apikey,
         "fabric" -> fabric,
         "collection" -> targetCollection,

@@ -9,7 +9,7 @@ import org.apache.spark.unsafe.types.UTF8String
 
 class MacrometaCollectionPartitionReader(inputPartition: MacrometaCollectionPartition, options: Map[String, String], schema: StructType)   extends PartitionReader[InternalRow]{
 
-  val client = new MacrometaCursor(federation = options("federation"),
+  val client = new MacrometaCursor(federation = options("regionUrl"),
     apikey = options("apiKey"), fabric = options("fabric"))
 
   val response: Json = client.executeQuery(batchSize =

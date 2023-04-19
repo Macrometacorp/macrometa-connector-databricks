@@ -12,7 +12,7 @@ import java.util
 class MacrometaTableProvider extends TableProvider with DataSourceRegister{
 
   private def macrometaClient(option: CaseInsensitiveStringMap): MacrometaCursor = {
-    new MacrometaCursor(federation = option.get("federation"),
+    new MacrometaCursor(federation = option.get("regionUrl"),
       apikey = option.get("apikey"), fabric = option.get("fabric"))
   }
 

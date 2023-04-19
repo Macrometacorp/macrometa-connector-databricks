@@ -8,7 +8,7 @@ import org.apache.spark.sql.SparkSession
 
 object StreamTest extends App {
 
-  val federation = "*.macrometa.io"
+  val regionUrl = "*.macrometa.io"
   val port = "6651"
   val fabric = "_system"
   val tenant = "<YOUR_TENANT>"
@@ -18,8 +18,8 @@ object StreamTest extends App {
   val sourceSubscription = "test-subscription-123"
 
   val sourceOptions = Map(
-    "federation" -> federation,
-    "jwtToken" -> authToken,
+    "regionUrl" -> regionUrl,
+    "token" -> authToken,
     "fabric" -> fabric,
     "tenant" -> tenant,
     "replication" -> replication,
@@ -41,9 +41,9 @@ object StreamTest extends App {
   val targetSubscription = "test-subscription-10"
   val targetStream = "<TARGET_SAMPLE_STREAM_NAME>"
   val targetOptions = Map(
-    "federation" -> federation,
+    "regionUrl" -> regionUrl,
     "port" -> port,
-    "jwtToken" -> authToken,
+    "token" -> authToken,
     "fabric" -> fabric,
     "tenant" -> tenant,
     "replication" -> replication,

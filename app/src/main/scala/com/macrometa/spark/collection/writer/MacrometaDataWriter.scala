@@ -27,7 +27,7 @@ class MacrometaDataWriter(options: Map[String, String], schema: StructType) exte
   override def commit(): WriterCommitMessage = {
 
     val data : ImportDataDTO = ImportDataDTO.apply(data = buffer, primaryKey = options.getOrElse("primaryKey",""))
-    val client = new MacrometaImport(federation = options("federation"),
+    val client = new MacrometaImport(federation = options("regionUrl"),
       apikey = options("apiKey"), fabric = options("fabric"))
     insertManyFuture = Some(client.insertMany(collection = options("collection"), body = data))
     buffer.clear()

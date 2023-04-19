@@ -15,7 +15,7 @@ import org.apache.spark.unsafe.types.UTF8String
 
 class MacrometaStreamingDataWriter(options: Map[String, String], schema: StructType) extends DataWriter[InternalRow]{
   val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation =
-    options.getOrElse("federation", ""),port = options.getOrElse("port",6651.toString), jwtToken = options.getOrElse("jwtToken", "")).getClient
+    options.getOrElse("regionUrl", ""),port = options.getOrElse("port",6651.toString), jwtToken = options.getOrElse("token", "")).getClient
 
   val topic: String = new MacrometaUtils().createTopic(options)
   private val producer: Producer[Array[Byte]] = client.newProducer(PulsarSchema.BYTES).topic(topic).create()

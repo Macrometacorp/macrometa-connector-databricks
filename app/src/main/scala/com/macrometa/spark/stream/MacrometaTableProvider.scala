@@ -20,8 +20,8 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister{
   override def supportsExternalMetadata(): Boolean = true
 
   override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
-    val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("federation"),
-      port = options.getOrDefault("port",6651.toString), jwtToken = options.get("jwtToken")).getClient
+    val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("regionUrl"),
+      port = options.getOrDefault("port",6651.toString), jwtToken = options.get("token")).getClient
     new MacrometaUtils().inferSchema(client = client, options = options)
   }
 }

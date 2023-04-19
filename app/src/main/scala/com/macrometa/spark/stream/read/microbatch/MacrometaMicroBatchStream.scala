@@ -16,8 +16,8 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 
 class MacrometaMicroBatchStream(options: CaseInsensitiveStringMap, schema: StructType) extends MicroBatchStream {
-  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("federation"),
-    port = options.getOrDefault("port",6651.toString), jwtToken = options.get("jwtToken")).getClient
+  val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("regionUrl"),
+    port = options.getOrDefault("port",6651.toString), jwtToken = options.get("token")).getClient
   val topic: String = new MacrometaUtils().createTopic(options)
   val consumer: Consumer[Array[Byte]] = client.newConsumer[Array[Byte]](PulsarSchema.BYTES).topic(topic).
     subscriptionName(options.get("subscriptionName")).subscriptionType(SubscriptionType.Shared).subscribe()
