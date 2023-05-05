@@ -76,7 +76,3 @@ modifiedDF
 ```scala
 spark.close()
 ```
-
-
-
-
