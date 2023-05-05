@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023 Macrometa Corp All rights reserved.
+ */
+
 package com.macrometa.spark.collection.utils
 
 import io.circe.Json

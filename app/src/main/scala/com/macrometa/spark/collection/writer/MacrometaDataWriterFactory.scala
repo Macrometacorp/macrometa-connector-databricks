@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023 Macrometa Corp All rights reserved.
+ */
+
 package com.macrometa.spark.collection.writer
 
 import org.apache.spark.sql.catalyst.InternalRow

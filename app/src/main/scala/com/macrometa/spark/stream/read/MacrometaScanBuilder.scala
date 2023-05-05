@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023 Macrometa Corp All rights reserved.
+ */
+
 package com.macrometa.spark.stream.read
 
 import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownFilters, SupportsPushDownRequiredColumns}

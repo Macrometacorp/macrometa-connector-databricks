@@ -1,6 +1,6 @@
-# Macrometa Spark Collection Connector for Databricks
+# Macrometa Collections Databricks Connector
 
-The Macrometa Spark Collection Connector allows you to integrate [Apache Spark](https://spark.apache.org/) with [Macrometa](https://www.macrometa.com/docs/collections/) collections, allows you to read and write data from and to Macrometa collections using Apache Spark.
+The Macrometa Collections Databricks Connector allows you to integrate [Apache Spark](https://spark.apache.org/) with [Macrometa](https://www.macrometa.com/docs/collections/) collections, allows you to read and write data from and to Macrometa collections using Apache Spark.
 
 ## Requirements
 
@@ -16,7 +16,7 @@ The Macrometa Spark Collection Connector allows you to integrate [Apache Spark](
 
 ```scala
 val sourceOptions = Map(
-  "federation" -> "<FEDERATION>",
+  "regionUrl" -> "<REGION_URL>",
   "apiKey" -> "apikey <API_KEY>",
   "fabric" -> "<FABRIC>",
   "collection" -> "<COLLECTION>",
@@ -55,7 +55,7 @@ val modifiedDF = inputDF
 1. Set up your target options:
 ```scala
 val targetOptions = Map(
-  "federation" -> "<FEDERATION>",
+  "regionUrl" -> "<REGION_URL>",
   "apiKey" -> "apikey <API_KEY>",
   "fabric" -> "<FABRIC>",
   "collection" -> "<COLLECTION>",

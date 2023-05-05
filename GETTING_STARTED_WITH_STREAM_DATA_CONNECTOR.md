@@ -1,6 +1,6 @@
-# Macrometa Spark Streaming Connector for Databricks
+# Macrometa Stream Databricks Connector
 
-The Macrometa Spark Streaming Connector allows you to integrate [Apache Spark](https://spark.apache.org/) with [Macrometa](https://www.macrometa.com/docs/streams/) streams, making it easy to process and analyze real-time data using Spark's powerful capabilities in a Databricks environment.
+The Macrometa Stream Databricks Connector allows you to integrate [Apache Spark](https://spark.apache.org/) with [Macrometa](https://www.macrometa.com/docs/streams/) streams, making it easy to process and analyze real-time data using Spark's powerful capabilities in a Databricks environment.
 
 ## Requirements
 
@@ -16,8 +16,8 @@ The Macrometa Spark Streaming Connector allows you to integrate [Apache Spark](h
 
 ```scala
 val sourceOptions = Map(
-  "federation" -> "<FEDERATION>",
-  "jwtToken" -> "<AUTH_TOKEN>",
+  "regionUrl" -> "<REGION_URL>",
+  "token" -> "<TOKEN>",
   "fabric" -> "<FABRIC>",
   "tenant" -> "<TENANT>",
   "replication" -> "<REPLICATION>",
@@ -44,9 +44,9 @@ val inputStream = spark.readStream
 1. Set up your target options:
 ```scala
 val targetOptions = Map(
-  "federation" -> "<FEDERATION>",
+  "regionUrl" -> "<REGION_URL>",
   "port" -> "<PORT>",
-  "jwtToken" -> "<AUTH_TOKEN>",
+  "token" -> "<TOKEN>",
   "fabric" -> "<FABRIC>",
   "tenant" -> "<TENANT>",
   "replication" -> "<REPLICATION>",

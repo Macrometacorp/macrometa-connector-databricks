@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023 Macrometa Corp All rights reserved.
+ */
+
 package com.macrometa.spark.stream.pulsar
 
 import org.apache.pulsar.client.api.{AuthenticationFactory, PulsarClient}
