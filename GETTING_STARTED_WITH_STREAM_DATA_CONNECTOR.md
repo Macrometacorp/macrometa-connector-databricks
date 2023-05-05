@@ -68,7 +68,3 @@ val targetOptions = Map(
 ```scala
 query.awaitTermination()
 ```
-
-
-
-
