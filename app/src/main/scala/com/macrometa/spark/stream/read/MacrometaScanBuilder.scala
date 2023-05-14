@@ -4,12 +4,22 @@
 
 package com.macrometa.spark.stream.read
 
-import org.apache.spark.sql.connector.read.{Scan, ScanBuilder, SupportsPushDownFilters, SupportsPushDownRequiredColumns}
+import org.apache.spark.sql.connector.read.{
+  Scan,
+  ScanBuilder,
+  SupportsPushDownFilters,
+  SupportsPushDownRequiredColumns
+}
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
-class MacrometaScanBuilder(options: CaseInsensitiveStringMap, schema: StructType) extends ScanBuilder with SupportsPushDownFilters with SupportsPushDownRequiredColumns {
+class MacrometaScanBuilder(
+    options: CaseInsensitiveStringMap,
+    schema: StructType
+) extends ScanBuilder
+    with SupportsPushDownFilters
+    with SupportsPushDownRequiredColumns {
   override def build(): Scan = new MacrometaScan(options, schema)
 
   override def pushFilters(filters: Array[Filter]): Array[Filter] = ???

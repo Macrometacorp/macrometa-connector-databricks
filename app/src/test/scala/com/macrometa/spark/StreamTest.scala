@@ -5,7 +5,6 @@ package com.macrometa.spark
 
 import org.apache.spark.sql.SparkSession
 
-
 object StreamTest extends App {
 
   val regionUrl = "*.macrometa.io"
@@ -14,7 +13,7 @@ object StreamTest extends App {
   val tenant = "<YOUR_TENANT>"
   val replication = "global"
   val sourceStream = "<SOURCE_SAMPLE_STREAM_NAME>"
-  val authToken =  ""
+  val authToken = ""
   val sourceSubscription = "test-subscription-123"
 
   val sourceOptions = Map(
@@ -27,8 +26,9 @@ object StreamTest extends App {
     "subscriptionName" -> sourceSubscription
   )
 
-
-  val spark = SparkSession.builder().appName("MacrometaStreamingApp")
+  val spark = SparkSession
+    .builder()
+    .appName("MacrometaStreamingApp")
     .master("local[*]")
     .getOrCreate()
 
@@ -36,7 +36,6 @@ object StreamTest extends App {
     .format("com.macrometa.spark.stream.MacrometaTableProvider")
     .options(sourceOptions)
     .load()
-
 
   val targetSubscription = "test-subscription-10"
   val targetStream = "<TARGET_SAMPLE_STREAM_NAME>"
@@ -52,13 +51,13 @@ object StreamTest extends App {
     "checkpointLocation" -> "checkpoint"
   )
 
-  val query = inputStream.select("symbol","ma").withColumnRenamed("ma", "value").writeStream
+  val query = inputStream
+    .select("symbol", "ma")
+    .withColumnRenamed("ma", "value")
+    .writeStream
     .format("com.macrometa.spark.stream.MacrometaTableProvider")
     .options(targetOptions)
     .start()
-
-
-
   query.awaitTermination()
   query.stop()
 

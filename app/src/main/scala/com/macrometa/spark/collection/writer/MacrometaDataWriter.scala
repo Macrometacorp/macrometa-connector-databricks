@@ -17,7 +17,9 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
 
-class MacrometaDataWriter(options: Map[String, String], schema: StructType) extends DataWriter[InternalRow] with Logging {
+class MacrometaDataWriter(options: Map[String, String], schema: StructType)
+    extends DataWriter[InternalRow]
+    with Logging {
 
   private val converter = new InternalRowJsonConverter(schema)
   private val buffer = new ListBuffer[Json]()
@@ -30,10 +32,18 @@ class MacrometaDataWriter(options: Map[String, String], schema: StructType) exte
 
   override def commit(): WriterCommitMessage = {
 
-    val data : ImportDataDTO = ImportDataDTO.apply(data = buffer, primaryKey = options.getOrElse("primaryKey",""))
-    val client = new MacrometaImport(federation = options("regionUrl"),
-      apikey = options("apiKey"), fabric = options("fabric"))
-    insertManyFuture = Some(client.insertMany(collection = options("collection"), body = data))
+    val data: ImportDataDTO = ImportDataDTO.apply(
+      data = buffer,
+      primaryKey = options.getOrElse("primaryKey", "")
+    )
+    val client = new MacrometaImport(
+      federation = options("regionUrl"),
+      apikey = options("apiKey"),
+      fabric = options("fabric")
+    )
+    insertManyFuture = Some(
+      client.insertMany(collection = options("collection"), body = data)
+    )
     buffer.clear()
     null
   }
@@ -48,5 +58,5 @@ class MacrometaDataWriter(options: Map[String, String], schema: StructType) exte
   }
 }
 
-
-case class MacrometaWriterCommitMessage(status: String) extends WriterCommitMessage
+case class MacrometaWriterCommitMessage(status: String)
+    extends WriterCommitMessage

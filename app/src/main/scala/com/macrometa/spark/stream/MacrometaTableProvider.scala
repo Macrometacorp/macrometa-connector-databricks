@@ -14,18 +14,26 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import java.util
 
+class MacrometaTableProvider extends TableProvider with DataSourceRegister {
 
-class MacrometaTableProvider extends TableProvider with DataSourceRegister{
-
-  override def getTable(schema: StructType, partitioning: Array[Transform], properties: util.Map[String, String]): Table = new MacrometaTable(schema, partitioning, properties)
+  override def getTable(
+      schema: StructType,
+      partitioning: Array[Transform],
+      properties: util.Map[String, String]
+  ): Table = new MacrometaTable(schema, partitioning, properties)
 
   override def shortName(): String = "macrometa"
 
   override def supportsExternalMetadata(): Boolean = true
 
   override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
-    val client: PulsarClient = MacrometaPulsarClientInstance.getInstance(federation = options.get("regionUrl"),
-      port = options.getOrDefault("port",6651.toString), jwtToken = options.get("token")).getClient
+    val client: PulsarClient = MacrometaPulsarClientInstance
+      .getInstance(
+        federation = options.get("regionUrl"),
+        port = options.getOrDefault("port", 6651.toString),
+        jwtToken = options.get("token")
+      )
+      .getClient
     new MacrometaUtils().inferSchema(client = client, options = options)
   }
 }

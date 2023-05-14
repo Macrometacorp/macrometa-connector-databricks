@@ -11,10 +11,19 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 
-class MacrometaBatchWriter(options: CaseInsensitiveStringMap, schema: StructType) extends BatchWrite with
-  SupportsTruncate with Logging{
-  override def createBatchWriterFactory(info: PhysicalWriteInfo): DataWriterFactory =
-    MacrometaDataWriterFactory(options.asCaseSensitiveMap().asScala.toMap, schema)
+class MacrometaBatchWriter(
+    options: CaseInsensitiveStringMap,
+    schema: StructType
+) extends BatchWrite
+    with SupportsTruncate
+    with Logging {
+  override def createBatchWriterFactory(
+      info: PhysicalWriteInfo
+  ): DataWriterFactory =
+    MacrometaDataWriterFactory(
+      options.asCaseSensitiveMap().asScala.toMap,
+      schema
+    )
 
   override def commit(messages: Array[WriterCommitMessage]): Unit = {}
 
