@@ -1,0 +1,2 @@
+com.macrometa.spark.collection.MacrometaTableProvider
+com.macrometa.spark.stream.MacrometaTableProvider
