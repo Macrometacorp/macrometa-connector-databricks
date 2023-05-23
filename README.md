@@ -1,4 +1,4 @@
-# Macrometa Databricks Connector
+# Macrometa-Connector-Databricks
 
 The Macrometa Spark Connector for [Databricks](https://www.databricks.com/) is a versatile and efficient integration tool that enables users to seamlessly connect Macrometa's real-time data [streams](https://www.macrometa.com/docs/streams/) and [collections](https://www.macrometa.com/docs/collections/) with Apache Spark within the Databricks environment. This comprehensive connector facilitates the ingestion, processing, and analysis of both streaming and batch data by leveraging Spark's advanced capabilities, allowing users to derive valuable insights and make data-driven decisions.
 
@@ -19,17 +19,17 @@ The Streaming Data Connector handles real-time data streams, while the Collectio
 
 1. Clone the Macrometa Spark Streaming Connector project from GitHub:
 
-- git clone https://github.com/Macrometacorp/databricks-connector.git
+- git clone https://github.com/Macrometacorp/macrometa-connector-databricks.git
 
 2. Change to the project directory:
 
-- cd databricks-connector
+- cd macrometa-connector-databricks
 
 3. Build the connector JAR using Gradle:
 
 - ./gradlew clean shadowJar
 
-4. The generated JAR file named 'macrometa-spark-dataconnector.jar' will be located in the `build/libs` directory. Upload the JAR file to your Databricks workspace using the [Databricks CLI](https://docs.databricks.com/dev-tools/cli/index.html) or the Databricks UI.
+4. The generated JAR file named 'macrometa-connector-databricks.jar' will be located in the `app/build/libs` directory. Upload the JAR file to your Databricks workspace using the [Databricks CLI](https://docs.databricks.com/dev-tools/cli/index.html) or the Databricks UI.
 
 5. Attach the JAR file to your Databricks cluster by following the instructions in the [Databricks documentation](https://docs.databricks.com/libraries/cluster-libraries.html#install-a-library-on-a-cluster).
 
