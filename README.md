@@ -1,4 +1,4 @@
-# Macrometa-Connector-Databricks
+# Macrometa Connector Databricks
 
 The Macrometa Spark Connector for [Databricks](https://www.databricks.com/) is a versatile and efficient integration tool that enables users to seamlessly connect Macrometa's real-time data [streams](https://www.macrometa.com/docs/streams/) and [collections](https://www.macrometa.com/docs/collections/) with Apache Spark within the Databricks environment. This comprehensive connector facilitates the ingestion, processing, and analysis of both streaming and batch data by leveraging Spark's advanced capabilities, allowing users to derive valuable insights and make data-driven decisions.
 
