@@ -59,25 +59,32 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String) {
 
   def inferSchema(collection: String, query: String): StructType = {
     val jsonResponse: Json =
-      getSampleDocument(collection = collection, query = query)
-    val resultEntity: Json = jsonResponse.asObject.get("result").get
+      getSampleDocuments(collection = collection, query = query)
     val spark = SparkSession.getActiveSession.get
-    val jsonAsDataFrame = spark.read.json(
-      spark.sparkContext.parallelize(Seq(resultEntity.toString))
-    )
-    jsonAsDataFrame.schema
+
+    val results =
+      jsonResponse.hcursor.downField("result").as[Json].getOrElse(Json.arr())
+
+    val schemas: Seq[StructType] = results.asArray.get.map { resultEntity =>
+      val jsonAsDataFrame = spark.read.json(
+        spark.sparkContext.parallelize(Seq(resultEntity.toString))
+      )
+      jsonAsDataFrame.schema
+    }
+    findMostCommonSchema(schemas)
   }
 
-  private def getSampleDocument(collection: String, query: String): Json = {
+  private def getSampleDocuments(collection: String, query: String): Json = {
     val response: Future[HttpResponse] = Http().singleRequest(
       request(
-        1,
+        50,
         collection,
         endpoint = "_api/cursor",
         method = HttpMethods.POST,
         query
       )
     )
+
     val timeout = 10.seconds
     val res = Await.ready(
       response
@@ -85,14 +92,29 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String) {
         .map(entity => entity.data.utf8String),
       timeout
     )
+
     val obj = parser.parse(res.value.get.get)
-    val json: Json = obj.getOrElse(null)
+    val json: Json = obj.getOrElse(Json.Null)
 
     response.onComplete { case Success(value) =>
       Http().shutdownAllConnectionPools()
       system.terminate()
     }
+
     json
+  }
+
+  private def findMostCommonSchema(schemas: Seq[StructType]): StructType = {
+    println("\n\n")
+    println(schemas)
+    println("\n\n")
+    if (schemas.isEmpty) {
+      new StructType()
+    } else {
+      val grouped = schemas.groupBy(identity).mapValues(_.size)
+      val mostCommon = grouped.maxBy(_._2)._1
+      mostCommon
+    }
   }
 
   def executeQuery(batchSize: Int, collection: String, query: String): Json = {

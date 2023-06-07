@@ -6,36 +6,62 @@ package com.macrometa.spark.collection.utils
 
 import io.circe.Json
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{
+  ArrayType,
   BooleanType,
+  DataType,
   DoubleType,
+  FloatType,
   IntegerType,
   LongType,
   StringType,
   StructType
 }
+import org.apache.spark.unsafe.types.UTF8String
 
 class InternalRowJsonConverter(schema: StructType) {
-  private val jsonFields: Array[(String, Json)] =
-    schema.fields.zipWithIndex.map { case (field, index) =>
-      (field.name, Json.Null)
+  def internalRowToJson(row: InternalRow): Json = {
+
+    def valueToJson(value: Any, dataType: DataType): Json = {
+      if (value == null) {
+        Json.Null
+      } else {
+        dataType match {
+          case StringType =>
+            Json.fromString(value.asInstanceOf[UTF8String].toString)
+          case IntegerType => Json.fromInt(value.asInstanceOf[Int])
+          case LongType    => Json.fromLong(value.asInstanceOf[Long])
+          case DoubleType  => Json.fromDoubleOrNull(value.asInstanceOf[Double])
+          case FloatType   => Json.fromFloatOrNull(value.asInstanceOf[Float])
+          case BooleanType => Json.fromBoolean(value.asInstanceOf[Boolean])
+          case structType: StructType =>
+            internalRowToJsonObject(value.asInstanceOf[InternalRow], structType)
+          case ArrayType(elementType, _) =>
+            val arrayData = value.asInstanceOf[ArrayData]
+            val jsonArray = arrayData
+              .toArray(elementType)
+              .map(valueToJson(_, elementType))
+              .toSeq
+            Json.fromValues(jsonArray)
+          case _ =>
+            throw new UnsupportedOperationException(
+              s"Unsupported data type: $dataType"
+            )
+        }
+      }
     }
 
-  def internalRowToJson(row: InternalRow): Json = {
-    schema.fields.zipWithIndex.foreach { case (field, index) =>
-      val fieldValue = field.dataType match {
-        case StringType  => Json.fromString(row.getString(index))
-        case IntegerType => Json.fromInt(row.getInt(index))
-        case LongType    => Json.fromLong(row.getLong(index))
-        case DoubleType  => Json.fromDoubleOrNull(row.getDouble(index))
-        case BooleanType => Json.fromBoolean(row.getBoolean(index))
-        case _ =>
-          throw new UnsupportedOperationException(
-            s"Unsupported data type: ${field.dataType}"
-          )
+    def internalRowToJsonObject(row: InternalRow, schema: StructType): Json = {
+      val fields = schema.fields.zipWithIndex.map { case (field, index) =>
+        val fieldValue =
+          valueToJson(row.get(index, field.dataType), field.dataType)
+        (field.name, fieldValue)
       }
-      jsonFields(index) = jsonFields(index).copy(_2 = fieldValue)
+      Json.fromFields(fields)
     }
-    Json.fromFields(jsonFields)
+
+    internalRowToJsonObject(row, schema)
   }
+
 }

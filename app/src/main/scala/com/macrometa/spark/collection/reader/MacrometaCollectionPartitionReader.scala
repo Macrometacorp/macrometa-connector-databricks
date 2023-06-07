@@ -7,8 +7,19 @@ package com.macrometa.spark.collection.reader
 import com.macrometa.spark.collection.client.MacrometaCursor
 import io.circe.{Json, parser}
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.sql.connector.read.PartitionReader
-import org.apache.spark.sql.types.{LongType, StringType, StructType}
+import org.apache.spark.sql.types.{
+  ArrayType,
+  BooleanType,
+  DataType,
+  DoubleType,
+  FloatType,
+  LongType,
+  NullType,
+  StringType,
+  StructType
+}
 import org.apache.spark.unsafe.types.UTF8String
 
 class MacrometaCollectionPartitionReader(
@@ -54,25 +65,54 @@ class MacrometaCollectionPartitionReader(
           case None =>
             throw new RuntimeException("Expected a JSON array")
           case Some(jsonArray) =>
-            jsonArray.iterator.map { jsonObject =>
-              val values = schema.fields.map { field =>
+            jsonArray.iterator.map { jsonObject => // Change flatMap to map
+              val valuesOpt = schema.fields.map { field =>
                 val fieldName = field.name
                 val fieldType = field.dataType
-                val fieldValue: Json = jsonObject.hcursor
+                val fieldValueOpt: Option[Json] = jsonObject.hcursor
                   .downField(fieldName)
                   .focus
-                  .getOrElse(Json.Null)
 
-                fieldType match {
-                  case StringType =>
-                    UTF8String.fromString(fieldValue.asString.getOrElse(null))
-                  case LongType =>
-                    fieldValue.asNumber.flatMap(_.toLong).getOrElse(null)
-                }
+                fieldValueOpt
+                  .flatMap { fieldValue =>
+                    jsonToDataType(fieldValue, fieldType)
+                  }
+                  .orElse(Some(null)) // Add a default value of null
               }
-              InternalRow.fromSeq(values)
+
+              // Create an InternalRow even if there are null values
+              InternalRow.fromSeq(
+                valuesOpt.map(_.orNull)
+              ) // Remove the condition checking for all defined
             }
         }
+    }
+  }
+
+  def jsonToDataType(json: Json, dataType: DataType): Option[Any] = {
+    dataType match {
+      case StringType  => json.asString.map(UTF8String.fromString)
+      case LongType    => json.asNumber.flatMap(_.toLong)
+      case DoubleType  => json.asNumber.map(_.toDouble)
+      case FloatType   => json.asNumber.map(_.toFloat)
+      case NullType    => if (json.isNull) Some(null) else None
+      case BooleanType => json.asBoolean
+      case ArrayType(elementType, _) =>
+        json.asArray.map { jsonArray =>
+          new GenericArrayData(
+            jsonArray.map(jsonElement =>
+              jsonToDataType(jsonElement, elementType).orNull
+            )
+          )
+        }
+      case structType: StructType =>
+        json.asObject.map(obj => {
+          val rowValues = structType.fields.flatMap(field => {
+            jsonToDataType(obj(field.name).getOrElse(Json.Null), field.dataType)
+          })
+          InternalRow.fromSeq(rowValues)
+        })
+      case _ => None
     }
   }
 
