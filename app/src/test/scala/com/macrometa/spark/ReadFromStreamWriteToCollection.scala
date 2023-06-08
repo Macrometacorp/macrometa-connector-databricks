@@ -3,9 +3,9 @@
  */
 package com.macrometa.spark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
-object StreamTest extends App {
+object ReadFromStreamWriteToCollection extends App {
 
   val regionUrl = "*.macrometa.io"
   val port = "6651"
@@ -18,7 +18,6 @@ object StreamTest extends App {
 
   val sourceOptions = Map(
     "regionUrl" -> regionUrl,
-    "port" -> port,
     "token" -> authToken,
     "fabric" -> fabric,
     "tenant" -> tenant,
@@ -38,28 +37,25 @@ object StreamTest extends App {
     .options(sourceOptions)
     .load()
 
-  val targetSubscription = "test-subscription-10"
-  val targetStream = "<TARGET_SAMPLE_STREAM_NAME>"
+
   val targetOptions = Map(
     "regionUrl" -> regionUrl,
-    "port" -> port,
-    "token" -> authToken,
+    "apiKey" -> "apikey ",
     "fabric" -> fabric,
-    "tenant" -> tenant,
-    "replication" -> replication,
-    "stream" -> targetStream,
-    "subscriptionName" -> targetSubscription,
-    "checkpointLocation" -> "checkpoint"
+    "collection" -> "<YOUR_TARGET_COLLECTION>",
+    "batchSize" -> 100.toString,
   )
-
-  val query = inputStream
-    .select("symbol", "ma")
-    .withColumnRenamed("ma", "value")
-    .writeStream
-    .format("com.macrometa.spark.stream.MacrometaTableProvider")
-    .options(targetOptions)
+  val query = inputStream.writeStream
+    .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
+      batchDF.write
+        .format("com.macrometa.spark.collection.MacrometaTableProvider")
+        .options(targetOptions)
+        .mode(SaveMode.Append)
+        .save()
+    }
+    .option("checkpointLocation", "checkpoint")
     .start()
+
   query.awaitTermination()
-  query.stop()
 
 }

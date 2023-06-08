@@ -42,7 +42,11 @@ class MacrometaDataWriter(options: Map[String, String], schema: StructType)
       fabric = options("fabric")
     )
     insertManyFuture = Some(
-      client.insertMany(collection = options("collection"), body = data)
+      client.insertMany(
+        collection = options("collection"),
+        body = data,
+        batchSize = options.getOrElse("batchSize", "100").toInt
+      )
     )
     buffer.clear()
     null
