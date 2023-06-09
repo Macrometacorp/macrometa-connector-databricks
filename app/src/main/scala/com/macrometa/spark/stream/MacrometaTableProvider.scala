@@ -48,8 +48,8 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
 
     val replication = options.getOrDefault("replication", "global")
     if (
-      replication
-        .equalsIgnoreCase("global") || replication.equalsIgnoreCase("local")
+      !(replication
+        .equalsIgnoreCase("global") || replication.equalsIgnoreCase("local"))
     ) {
       throw new IllegalArgumentException(
         "Replication type should be either global or local"
