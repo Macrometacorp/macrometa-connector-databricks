@@ -34,20 +34,36 @@ class MacrometaCollectionPartitionReader(
     fabric = options("fabric")
   )
 
-  val response: Json = client.executeQuery(
-    batchSize = options.getOrElse("batchSize", 100.toString).toInt,
+  private val documentsIterator: Iterator[Json] = client.executeQuery(
+    batchSize = options("batchSize").toInt,
     collection = options("collection"),
-    options.getOrElse("query", "")
+    query = options("query")
   )
 
   private val dataIterator: Iterator[InternalRow] =
-    jsonToInternalRowIterator(response.toString(), schema)
+    new Iterator[InternalRow] {
+      private var internalRowIterator: Iterator[InternalRow] = Iterator.empty
 
-  override def next(): Boolean = dataIterator.hasNext
+      override def hasNext: Boolean =
+        internalRowIterator.hasNext || fetchNextBatch()
 
-  override def get(): InternalRow = {
-    dataIterator.next()
-  }
+      override def next(): InternalRow = internalRowIterator.next()
+
+      private def fetchNextBatch(): Boolean = {
+        if (!documentsIterator.hasNext) {
+          false
+        } else {
+          val jsonBatch = documentsIterator.next()
+          internalRowIterator =
+            jsonToInternalRowIterator(jsonBatch.toString(), schema)
+          true
+        }
+      }
+    }
+
+  def next(): Boolean = dataIterator.hasNext
+
+  def get(): InternalRow = dataIterator.next()
 
   override def close(): Unit = {}
 
@@ -61,30 +77,26 @@ class MacrometaCollectionPartitionReader(
           s"Failed to parse JSON: ${parseFailure.getMessage}"
         )
       case Right(json) =>
-        json.asArray match {
-          case None =>
-            throw new RuntimeException("Expected a JSON array")
-          case Some(jsonArray) =>
-            jsonArray.iterator.map { jsonObject => // Change flatMap to map
-              val valuesOpt = schema.fields.map { field =>
-                val fieldName = field.name
-                val fieldType = field.dataType
-                val fieldValueOpt: Option[Json] = jsonObject.hcursor
-                  .downField(fieldName)
-                  .focus
+        val jsonArray = json.asArray.getOrElse(Vector(json))
+        jsonArray.iterator.map { jsonObject =>
+          val valuesOpt = schema.fields.map { field =>
+            val fieldName = field.name
+            val fieldType = field.dataType
+            val fieldValueOpt: Option[Json] = jsonObject.hcursor
+              .downField(fieldName)
+              .focus
 
-                fieldValueOpt
-                  .flatMap { fieldValue =>
-                    jsonToDataType(fieldValue, fieldType)
-                  }
-                  .orElse(Some(null)) // Add a default value of null
+            fieldValueOpt
+              .flatMap { fieldValue =>
+                jsonToDataType(fieldValue, fieldType)
               }
+              .orElse(Some(null)) // Add a default value of null
+          }
 
-              // Create an InternalRow even if there are null values
-              InternalRow.fromSeq(
-                valuesOpt.map(_.orNull)
-              ) // Remove the condition checking for all defined
-            }
+          // Create an InternalRow even if there are null values
+          InternalRow.fromSeq(
+            valuesOpt.map(_.orNull)
+          )
         }
     }
   }
