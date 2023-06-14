@@ -62,27 +62,10 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
       val err = json.asObject.get("errorMessage").get
       val code = json.asObject.get("code").get
       throw new IllegalArgumentException(
-        s"Fabric ${fabric} does not exists, error with message ${err}, Status code: ${code}"
+        s"Invalid fabric ${fabric}, error with message ${err}, Status code: ${code}"
       )
 
     }
-    val fabrics = json.asObject.get("result").flatMap(_.asArray)
-
-    fabrics match {
-      case Some(array) =>
-        val fabricExists = array.exists(_.asString.contains(fabric))
-        if (!fabricExists) {
-          val spark = SparkSession.getActiveSession.get
-          spark.stop()
-          spark.close()
-          throw new IllegalArgumentException(
-            s"Error with fabric ${fabric}, does not exists."
-          )
-        }
-      case None =>
-        println("result is not an array or does not exist")
-    }
-
   }
 
   def validateCollection(collection: String): Unit = {
@@ -101,10 +84,10 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
 
     resultArray match {
       case Some(array) =>
-        val streamExists = array.exists(jsonObj =>
+        val collectionExists = array.exists(jsonObj =>
           jsonObj.asObject.get("name").get.asString.get == collection
         )
-        if (!streamExists) {
+        if (!collectionExists) {
           throw new IllegalArgumentException(
             s"Error with collection ${collection}, does not exists."
           )
