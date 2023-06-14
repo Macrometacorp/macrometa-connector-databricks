@@ -69,11 +69,9 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String) {
       val jsonAsDataFrame = spark.read.json(
         spark.sparkContext.parallelize(Seq(resultEntity.toString))
       )
-      println(jsonAsDataFrame.schema.printTreeString())
       jsonAsDataFrame.schema
 
     }
-    println(s"-----------$schemas")
     findMostCommonSchema(schemas)
   }
 
