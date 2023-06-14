@@ -66,7 +66,7 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
 
     macrometaClient(options).inferSchema(
       collection = collection,
-      query = defaultQuery
+      query = options.getOrDefault("query", defaultQuery)
     )
   }
 

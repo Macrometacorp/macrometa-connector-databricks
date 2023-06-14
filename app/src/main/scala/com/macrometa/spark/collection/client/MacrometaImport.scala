@@ -9,10 +9,12 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.Http
+import akka.stream.ThrottleMode
 import io.circe.Json
 import io.circe.syntax._
 
 import scala.concurrent.Future
+import scala.concurrent.duration.DurationInt
 
 class MacrometaImport(federation: String, apikey: String, fabric: String) {
   def insertMany(
@@ -51,6 +53,12 @@ class MacrometaImport(federation: String, apikey: String, fabric: String) {
 
     val flow: Flow[Json, HttpResponse, NotUsed] = Flow[Json]
       .map(createRequest)
+      .throttle(
+        elements = parallelism,
+        per = 1.second,
+        maximumBurst = batchSize,
+        ThrottleMode.Shaping
+      )
       .mapAsync(parallelism)(executeRequest)
 
     val sink: Sink[HttpResponse, Future[Done]] = Sink.foreach { response =>

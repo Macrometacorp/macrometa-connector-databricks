@@ -17,6 +17,7 @@ The Macrometa Stream Databricks Connector allows you to integrate [Apache Spark]
 ```scala
 val sourceOptions = Map(
   "regionUrl" -> "<REGION_URL>",
+  "port" -> "<PORT>",
   "token" -> "<TOKEN>",
   "fabric" -> "<FABRIC>",
   "tenant" -> "<TENANT>",

@@ -59,25 +59,33 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String) {
 
   def inferSchema(collection: String, query: String): StructType = {
     val jsonResponse: Json =
-      getSampleDocument(collection = collection, query = query)
-    val resultEntity: Json = jsonResponse.asObject.get("result").get
+      getSampleDocuments(collection = collection, query = query)
     val spark = SparkSession.getActiveSession.get
-    val jsonAsDataFrame = spark.read.json(
-      spark.sparkContext.parallelize(Seq(resultEntity.toString))
-    )
-    jsonAsDataFrame.schema
+
+    val results =
+      jsonResponse.hcursor.downField("result").as[Json].getOrElse(Json.arr())
+
+    val schemas: Seq[StructType] = results.asArray.get.map { resultEntity =>
+      val jsonAsDataFrame = spark.read.json(
+        spark.sparkContext.parallelize(Seq(resultEntity.toString))
+      )
+      jsonAsDataFrame.schema
+
+    }
+    findMostCommonSchema(schemas)
   }
 
-  private def getSampleDocument(collection: String, query: String): Json = {
+  private def getSampleDocuments(collection: String, query: String): Json = {
     val response: Future[HttpResponse] = Http().singleRequest(
       request(
-        1,
+        50,
         collection,
         endpoint = "_api/cursor",
         method = HttpMethods.POST,
         query
       )
     )
+
     val timeout = 10.seconds
     val res = Await.ready(
       response
@@ -85,82 +93,93 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String) {
         .map(entity => entity.data.utf8String),
       timeout
     )
+
     val obj = parser.parse(res.value.get.get)
-    val json: Json = obj.getOrElse(null)
+    val json: Json = obj.getOrElse(Json.Null)
 
     response.onComplete { case Success(value) =>
       Http().shutdownAllConnectionPools()
       system.terminate()
     }
+
     json
   }
 
-  def executeQuery(batchSize: Int, collection: String, query: String): Json = {
+  private def findMostCommonSchema(schemas: Seq[StructType]): StructType = {
+    println(schemas)
+    if (schemas.isEmpty) {
+      new StructType()
+    } else {
+      val grouped = schemas.groupBy(identity).mapValues(_.size)
+      val mostCommon = grouped.maxBy(_._2)._1
+      mostCommon
+    }
+  }
 
-    val response: Future[HttpResponse] = Http().singleRequest(
-      request(
-        batchSize,
-        collection,
-        endpoint = "_api/cursor",
-        method = HttpMethods.POST,
-        query
+  def executeQuery(
+      batchSize: Int,
+      collection: String,
+      query: String
+  ): Iterator[Json] = new Iterator[Json] {
+
+    private var hasMore = true
+    private var id: Option[String] = None
+    private var documentsIterator: Iterator[Json] = Iterator.empty
+
+    override def hasNext: Boolean =
+      documentsIterator.hasNext || fetchNextBatch()
+
+    override def next(): Json = documentsIterator.next()
+
+    private def fetchNextBatch(): Boolean = {
+      if (!hasMore) {
+        return false
+      }
+
+      val endpoint = id match {
+        case Some(cursorId) => s"_api/cursor/$cursorId"
+        case None           => "_api/cursor"
+      }
+      val method = id match {
+        case Some(_) => HttpMethods.PUT
+        case None    => HttpMethods.POST
+      }
+
+      val responseCursor: Future[HttpResponse] = Http().singleRequest(
+        request(
+          batchSize,
+          collection,
+          endpoint = endpoint,
+          method = method,
+          query
+        )
       )
-    )
-    val timeout = 10.seconds
-    val res = Await.ready(
-      response
-        .flatMap(res => res.entity.toStrict(timeout))
-        .map(entity => entity.data.utf8String),
-      timeout
-    )
-    val obj = parser.parse(res.value.get.get)
-    val json: Json = obj.getOrElse(null)
 
-    var listOfDocuments: Json = json.asObject.get("result").get
+      val timeout = 15.seconds
+      val resCursor = Await.result(
+        responseCursor
+          .flatMap(res => res.entity.toStrict(timeout))
+          .map(entity => entity.data.utf8String),
+        timeout
+      )
 
-    var hasMore: Boolean = json.asObject.get("hasMore").get.asBoolean.get
-    var id = ""
+      val jsonCursor: Json = parser.parse(resCursor).getOrElse(null)
 
-    if (json.asObject.get("id").nonEmpty) {
-      id = json.asObject.get("id").get.asString.get
+      id = jsonCursor.hcursor.downField("id").focus.flatMap(_.asString)
+      hasMore = jsonCursor.hcursor
+        .downField("hasMore")
+        .focus
+        .flatMap(_.asBoolean)
+        .getOrElse(false)
+      documentsIterator = jsonCursor.hcursor
+        .downField("result")
+        .focus
+        .flatMap(_.asArray)
+        .getOrElse(Vector.empty)
+        .iterator
+
+      documentsIterator.hasNext
     }
-
-    if (hasMore) {
-      do {
-        val responseCursor: Future[HttpResponse] = Http().singleRequest(
-          request(
-            batchSize,
-            collection,
-            endpoint = s"_api/cursor/$id",
-            method = HttpMethods.PUT,
-            query
-          )
-        )
-        val timeout = 10.seconds
-        val resCursor = Await.ready(
-          responseCursor
-            .flatMap(res => res.entity.toStrict(timeout))
-            .map(entity => entity.data.utf8String),
-          timeout
-        )
-        val objCursor = parser.parse(resCursor.value.get.get)
-        val jsonCursor: Json = objCursor.getOrElse(null)
-        hasMore = jsonCursor.asObject.get("hasMore").get.asBoolean.get
-        val merged =
-          listOfDocuments.asArray.getOrElse(Vector.empty) ++ jsonCursor.asObject
-            .get("result")
-            .get
-            .asArray
-            .getOrElse(Vector.empty)
-        listOfDocuments = Json.fromValues(merged)
-      } while (hasMore)
-    }
-
-    response.onComplete { case Success(value) =>
-      Http().shutdownAllConnectionPools()
-      system.terminate()
-    }
-    listOfDocuments
   }
 
 }

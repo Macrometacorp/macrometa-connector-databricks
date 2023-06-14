@@ -15,7 +15,7 @@ import org.apache.spark.sql.types._
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, Future, TimeoutException}
 
 class MacrometaDataWriter(options: Map[String, String], schema: StructType)
     extends DataWriter[InternalRow]
@@ -56,10 +56,20 @@ class MacrometaDataWriter(options: Map[String, String], schema: StructType)
 
   override def close(): Unit = {
     insertManyFuture.foreach { future =>
-      val timeout = 5.minutes // Adjust the timeout as needed
-      Await.result(future, timeout)
+      val timeout = 10.minutes
+      try {
+        Await.result(future, timeout)
+      } catch {
+        case _: TimeoutException =>
+          // Handle timeout exception. Maybe log it and proceed?
+          log.warn("The operation timed out.")
+        case ex: Exception =>
+          // Handle other exceptions
+          log.error("An error occurred.", ex)
+      }
     }
   }
+
 }
 
 case class MacrometaWriterCommitMessage(status: String)
