@@ -8,7 +8,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 object CollectionTest extends App {
 
-  val apikey = "apikey "
+  val apikey = "apikey z"
   val regionUrl = "*.macrometa.io"
   val fabric = "_system"
   val sourceCollection = "<YOUR_SOURCE_COLLECTION>"

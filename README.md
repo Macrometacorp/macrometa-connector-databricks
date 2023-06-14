@@ -19,7 +19,7 @@ The Streaming Data Connector handles real-time data streams, while the Collectio
 ## Considerations
 
 - When mapping from a Macrometa Array to Spark Array, we are using ArrayType which is a collection data type that extends the DataType class which is a superclass of all types in PySpark. All elements of ArrayType should have the same type of elements.
-
+- When inferring schema, the connector retrieves the first 50 documents from a collection and chooses the most common one between them
 ## How to install the Macrometa Databricks Connector
 
 1. Clone the Macrometa Spark Streaming Connector project from GitHub:
