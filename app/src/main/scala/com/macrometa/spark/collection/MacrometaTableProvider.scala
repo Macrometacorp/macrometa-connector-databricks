@@ -46,9 +46,9 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
     val defaultQuery = s"FOR doc IN $collection RETURN doc"
 
     val batchSize = options.getOrDefault("batchSize", "100").toInt
-    if (batchSize <= 0 || batchSize > 1000) {
+    if (batchSize <= 1 || batchSize >= 10000) {
       throw new IllegalArgumentException(
-        "Batch size should be greater than 0 and less or equal to 1000"
+        "Batch size should be greater than 0 and less or equal to 10000"
       )
     }
 
@@ -58,7 +58,6 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
         throw new IllegalArgumentException(s"Option '$propName' is required")
       }
     }
-    macrometaValidations(options).validateAPiKeyPermissions(collection)
     macrometaValidations(options).validateFabric()
     macrometaValidations(options).validateCollection(options.get("collection"))
     macrometaValidations(options).validateQuery(
@@ -75,10 +74,14 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
       schema: StructType,
       partitioning: Array[Transform],
       properties: util.Map[String, String]
-  ): Table =
+  ): Table = {
+    val caseInsensitiveProperties = new CaseInsensitiveStringMap(properties)
+
     new MacrometaTable(
       schema = schema,
       partitioning = partitioning,
-      properties = properties
+      properties = properties,
+      macrometaValidations = macrometaValidations(caseInsensitiveProperties)
     )
+  }
 }

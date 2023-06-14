@@ -55,14 +55,14 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
   }
 
   def validateFabric(): Unit = {
-    val response = request(HttpMethods.GET, "database", "_system")
+    val response = request(HttpMethods.GET, "database/metadata", fabric)
     val obj = parser.parse(response.value.get.get)
     val json: Json = obj.getOrElse(Json.Null)
     if (json.asObject.get("error").get.asBoolean.get) {
       val err = json.asObject.get("errorMessage").get
       val code = json.asObject.get("code").get
       throw new IllegalArgumentException(
-        s"Error with message ${err}, Status code: ${code}"
+        s"Fabric ${fabric} does not exists, error with message ${err}, Status code: ${code}"
       )
 
     }
@@ -167,7 +167,10 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
     }
   }
 
-  def validateAPiKeyPermissions(collection: String): Unit = {
+  def validateAPiKeyPermissions(
+      collection: String,
+      accessLevels: Array[String]
+  ): Unit = {
     val words = apikey.split("\\.")
     val apikeyId = words(words.length - 2)
 
@@ -186,12 +189,14 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
     }
     json.asObject.flatMap(_("result")).flatMap(_.asString) match {
       case Some(permission)
-          if permission.equalsIgnoreCase("rw") => // do nothing
+          if accessLevels
+            .map(_.toLowerCase)
+            .contains(permission.toLowerCase) => // do nothing
       case _ =>
         throw new IllegalArgumentException(
           s"Apikey with insufficient permissions"
         )
     }
-
   }
+
 }
