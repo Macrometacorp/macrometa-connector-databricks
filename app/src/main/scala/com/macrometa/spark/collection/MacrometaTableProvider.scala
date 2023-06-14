@@ -4,7 +4,10 @@
 
 package com.macrometa.spark.collection
 
-import com.macrometa.spark.collection.client.MacrometaCursor
+import com.macrometa.spark.collection.client.{
+  MacrometaCursor,
+  MacrometaValidations
+}
 import org.apache.spark.sql.connector.catalog.{Table, TableProvider}
 import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.sources.DataSourceRegister
@@ -25,22 +28,60 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
     )
   }
 
+  private def macrometaValidations(
+      option: CaseInsensitiveStringMap
+  ): MacrometaValidations = {
+    new MacrometaValidations(
+      federation = option.get("regionUrl"),
+      apikey = option.get("apikey"),
+      fabric = option.get("fabric")
+    )
+  }
+
   override def shortName(): String = "macrometa"
 
-  override def inferSchema(options: CaseInsensitiveStringMap): StructType =
-    macrometaClient(options).inferSchema(
-      collection = options.get("collection"),
-      query = options.getOrDefault("query", "")
+  override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
+    val requiredProperties = Seq("regionUrl", "apiKey", "fabric", "collection")
+    val collection = options.get("collection")
+    val defaultQuery = s"FOR doc IN $collection RETURN doc"
+
+    val batchSize = options.getOrDefault("batchSize", "100").toInt
+    if (batchSize <= 1 || batchSize >= 10000) {
+      throw new IllegalArgumentException(
+        "Batch size should be greater than 0 and less or equal to 10000"
+      )
+    }
+
+    requiredProperties.foreach { propName =>
+      val propValue = options.get(propName)
+      if (propValue == null || propValue.isEmpty) {
+        throw new IllegalArgumentException(s"Option '$propName' is required")
+      }
+    }
+    macrometaValidations(options).validateFabric()
+    macrometaValidations(options).validateCollection(options.get("collection"))
+    macrometaValidations(options).validateQuery(
+      options.getOrDefault("query", defaultQuery)
     )
+
+    macrometaClient(options).inferSchema(
+      collection = collection,
+      query = defaultQuery
+    )
+  }
 
   override def getTable(
       schema: StructType,
       partitioning: Array[Transform],
       properties: util.Map[String, String]
-  ): Table =
+  ): Table = {
+    val caseInsensitiveProperties = new CaseInsensitiveStringMap(properties)
+
     new MacrometaTable(
       schema = schema,
       partitioning = partitioning,
-      properties = properties
+      properties = properties,
+      macrometaValidations = macrometaValidations(caseInsensitiveProperties)
     )
+  }
 }

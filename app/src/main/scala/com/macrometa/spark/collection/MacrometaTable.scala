@@ -4,6 +4,7 @@
 
 package com.macrometa.spark.collection
 
+import com.macrometa.spark.collection.client.MacrometaValidations
 import com.macrometa.spark.collection.reader.MacrometaScanBuilder
 import com.macrometa.spark.collection.writer.MacrometaWriteBuilder
 import org.apache.spark.sql.connector.catalog.{
@@ -24,7 +25,8 @@ import scala.collection.JavaConverters.setAsJavaSetConverter
 class MacrometaTable(
     schema: StructType,
     partitioning: Array[Transform],
-    properties: util.Map[String, String]
+    properties: util.Map[String, String],
+    macrometaValidations: MacrometaValidations
 ) extends Table
     with SupportsRead
     with SupportsWrite {
@@ -38,9 +40,21 @@ class MacrometaTable(
     TableCapability.ACCEPT_ANY_SCHEMA
   ).asJava
 
-  override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder =
+  override def newScanBuilder(
+      options: CaseInsensitiveStringMap
+  ): ScanBuilder = {
+    macrometaValidations.validateAPiKeyPermissions(
+      options.get("collection"),
+      Array("rw", "ro")
+    )
     new MacrometaScanBuilder(options, schema)
+  }
 
-  override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder =
+  override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
+    macrometaValidations.validateAPiKeyPermissions(
+      info.options().get("collection"),
+      Array("rw")
+    )
     new MacrometaWriteBuilder(info.options(), info.schema())
+  }
 }

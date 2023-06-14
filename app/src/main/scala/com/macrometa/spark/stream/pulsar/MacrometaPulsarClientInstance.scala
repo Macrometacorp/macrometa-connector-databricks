@@ -7,6 +7,7 @@ package com.macrometa.spark.stream.pulsar
 import org.apache.pulsar.client.api.{AuthenticationFactory, PulsarClient}
 
 import java.util.concurrent.TimeUnit
+import scala.collection.mutable
 
 class MacrometaPulsarClientInstance private (
     pulsarUrl: String,
@@ -24,7 +25,9 @@ class MacrometaPulsarClientInstance private (
 }
 
 object MacrometaPulsarClientInstance {
-  @volatile private var instance: Option[MacrometaPulsarClientInstance] = None
+  private val instances
+      : mutable.Map[(String, String, String), MacrometaPulsarClientInstance] =
+    mutable.Map()
 
   def getInstance(
       federation: String,
@@ -32,16 +35,16 @@ object MacrometaPulsarClientInstance {
       jwtToken: String
   ): MacrometaPulsarClientInstance = {
     val pulsarUrl = s"pulsar+ssl://api-$federation:$port"
-    instance match {
+    instances.get((federation, port, jwtToken)) match {
       case Some(client) => client
       case None =>
         synchronized {
-          instance match {
+          instances.get((federation, port, jwtToken)) match {
             case Some(client) => client
             case None =>
               val newInstance =
                 new MacrometaPulsarClientInstance(pulsarUrl, jwtToken)
-              instance = Some(newInstance)
+              instances((federation, port, jwtToken)) = newInstance
               newInstance
           }
         }
