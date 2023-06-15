@@ -155,7 +155,14 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
       accessLevels: Array[String]
   ): Unit = {
     val words = apikey.split("\\.")
-    val apikeyId = words(words.length - 2)
+    val apikeyId = words(words.length - 2).stripPrefix("apikey ").trim
+    // Id must start with a letter and can only contain alpha-numeric characters and the _ symbol
+    val idPattern = "^[a-zA-Z][a-zA-Z0-9_]*$"
+    if (!apikeyId.matches(idPattern)) {
+      throw new IllegalArgumentException(
+        s"Invalid ApikeyId ${apikeyId} detected in Apikey."
+      )
+    }
 
     val response = request(
       HttpMethods.GET,
