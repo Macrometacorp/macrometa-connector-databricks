@@ -4,30 +4,33 @@
 
 package com.macrometa.spark.stream.pulsar.macrometa_utils
 
-import org.apache.pulsar.client.api.{
-  PulsarClient,
-  SubscriptionType,
-  Schema => PulsarSchema
-}
+import org.apache.pulsar.client.api.{PulsarClient, SubscriptionInitialPosition, SubscriptionType, Schema => PulsarSchema}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
-import scala.util.Try
+import scala.collection.JavaConverters.mapAsScalaMapConverter
+import scala.util.{Failure, Success, Try}
 
 class MacrometaUtils {
   def createTopic(options: CaseInsensitiveStringMap): String = {
-    val topic =
-      s"persistent://${options.get("tenant")}/c8${options.get("replication")}.${options
-        .get("fabric")}/c8${options
-        .get("replication")}s.${options.get("stream")}"
-    topic
+    val scalaOptions: Map[String, String] = options.asScala.toMap
+    createTopic(scalaOptions)
   }
 
   def createTopic(options: Map[String, String]): String = {
-    val topic = s"persistent://${options("tenant")}/c8${options(
-      "replication"
-    )}.${options("fabric")}/c8${options("replication")}s.${options("stream")}"
+    val commonPrefix = s"persistent://${options("tenant")}/c8${options("replication")}.${options("fabric")}/"
+
+    val isCollectionStream = Try(options("isCollectionStream").toLowerCase.toBoolean) match {
+      case Success(booleanValue) => booleanValue
+      case Failure(_) => false // Default value to return when the conversion fails
+    }
+
+    val topic = if (isCollectionStream) {
+      s"${commonPrefix}${options("stream")}"
+    } else {
+      s"${commonPrefix}c8${options("replication")}s.${options("stream")}"
+    }
     topic
   }
 
@@ -39,6 +42,7 @@ class MacrometaUtils {
       .newConsumer(PulsarSchema.BYTES)
       .topic(createTopic(options))
       .subscriptionName(options.get("subscriptionName"))
+      .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
       .subscriptionType(SubscriptionType.Shared)
       .subscribe()
     val messageOpt: Option[Array[Byte]] =

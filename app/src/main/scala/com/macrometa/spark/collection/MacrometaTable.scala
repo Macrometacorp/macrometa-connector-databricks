@@ -44,16 +44,16 @@ class MacrometaTable(
       options: CaseInsensitiveStringMap
   ): ScanBuilder = {
     macrometaValidations.validateAPiKeyPermissions(
-      options.get("collection"),
-      Array("rw", "ro")
+      collection = options.get("collection"),
+      accessLevels = Array("rw", "ro")
     )
     new MacrometaScanBuilder(options, schema)
   }
 
   override def newWriteBuilder(info: LogicalWriteInfo): WriteBuilder = {
     macrometaValidations.validateAPiKeyPermissions(
-      info.options().get("collection"),
-      Array("rw")
+      collection = info.options().get("collection"),
+      accessLevels = Array("rw")
     )
     new MacrometaWriteBuilder(info.options(), info.schema())
   }

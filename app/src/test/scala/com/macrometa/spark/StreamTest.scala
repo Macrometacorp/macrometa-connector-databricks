@@ -13,17 +13,19 @@ object StreamTest extends App {
   val tenant = "<YOUR_TENANT>"
   val replication = "global"
   val sourceStream = "<SOURCE_SAMPLE_STREAM_NAME>"
-  val authToken = ""
+  val apikey = "<YOUR_APIKEY>"
+  val isCollectionStream = "false"
   val sourceSubscription = "test-subscription-123"
 
   val sourceOptions = Map(
     "regionUrl" -> regionUrl,
     "port" -> port,
-    "token" -> authToken,
+    "apikey" -> apikey,
     "fabric" -> fabric,
     "tenant" -> tenant,
     "replication" -> replication,
     "stream" -> sourceStream,
+    "isCollectionStream" -> isCollectionStream,
     "subscriptionName" -> sourceSubscription
   )
 
@@ -38,17 +40,15 @@ object StreamTest extends App {
     .options(sourceOptions)
     .load()
 
-  val targetSubscription = "test-subscription-10"
   val targetStream = "<TARGET_SAMPLE_STREAM_NAME>"
   val targetOptions = Map(
     "regionUrl" -> regionUrl,
     "port" -> port,
-    "token" -> authToken,
+    "apikey" -> apikey,
     "fabric" -> fabric,
     "tenant" -> tenant,
     "replication" -> replication,
     "stream" -> targetStream,
-    "subscriptionName" -> targetSubscription,
     "checkpointLocation" -> "checkpoint"
   )
 

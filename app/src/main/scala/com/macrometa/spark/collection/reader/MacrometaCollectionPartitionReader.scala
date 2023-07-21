@@ -54,9 +54,15 @@ class MacrometaCollectionPartitionReader(
           false
         } else {
           val jsonBatch = documentsIterator.next()
-          internalRowIterator =
-            jsonToInternalRowIterator(jsonBatch.toString(), schema)
-          true
+          val internalRowIteratorOpt = jsonToInternalRowIterator(jsonBatch.toString(), schema)
+          if (internalRowIteratorOpt.isEmpty) {
+            // Skip this batch and fetch the next one
+            fetchNextBatch()
+          }
+          else {
+            internalRowIterator = internalRowIteratorOpt
+            true
+          }
         }
       }
     }
@@ -90,27 +96,26 @@ class MacrometaCollectionPartitionReader(
               .flatMap { fieldValue =>
                 jsonToDataType(fieldValue, fieldType)
               }
-              .orElse(Some(null)) // Add a default value of null
           }
-
-          // Create an InternalRow even if there are null values
-          InternalRow.fromSeq(
-            valuesOpt.map(_.orNull)
-          )
-        }
+          if (valuesOpt.contains(None)) {
+            None
+          } else {
+            Some(InternalRow.fromSeq(valuesOpt.map(_.get)))
+          }
+        }.collect { case Some(internalRow) => internalRow }
     }
   }
 
   def jsonToDataType(json: Json, dataType: DataType): Option[Any] = {
     dataType match {
-      case StringType  => json.asString.map(UTF8String.fromString)
-      case LongType    => json.asNumber.flatMap(_.toLong)
-      case DoubleType  => json.asNumber.map(_.toDouble)
-      case FloatType   => json.asNumber.map(_.toFloat)
+      case StringType  => if (json.isNull) Some(null) else json.asString.map(UTF8String.fromString)
+      case LongType    => if (json.isNull) Some(null) else json.asNumber.flatMap(_.toLong)
+      case DoubleType  => if (json.isNull) Some(null) else json.asNumber.map(_.toDouble)
+      case FloatType   => if (json.isNull) Some(null) else json.asNumber.map(_.toFloat)
       case NullType    => if (json.isNull) Some(null) else None
-      case BooleanType => json.asBoolean
+      case BooleanType => if (json.isNull) Some(null) else json.asBoolean
       case ArrayType(elementType, _) =>
-        json.asArray.map { jsonArray =>
+        if (json.isNull) Some(null) else json.asArray.map { jsonArray =>
           new GenericArrayData(
             jsonArray.map(jsonElement =>
               jsonToDataType(jsonElement, elementType).orNull
@@ -118,7 +123,7 @@ class MacrometaCollectionPartitionReader(
           )
         }
       case structType: StructType =>
-        json.asObject.map(obj => {
+        if (json.isNull) Some(null) else json.asObject.map(obj => {
           val rowValues = structType.fields.flatMap(field => {
             jsonToDataType(obj(field.name).getOrElse(Json.Null), field.dataType)
           })

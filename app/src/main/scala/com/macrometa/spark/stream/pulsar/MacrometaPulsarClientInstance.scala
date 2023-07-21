@@ -11,13 +11,13 @@ import scala.collection.mutable
 
 class MacrometaPulsarClientInstance private (
     pulsarUrl: String,
-    jwtToken: String
+    apikey: String
 ) {
   private lazy val client: PulsarClient = {
     PulsarClient
       .builder()
       .serviceUrl(pulsarUrl)
-      .authentication(AuthenticationFactory.token(jwtToken))
+      .authentication(AuthenticationFactory.token(apikey))
       .connectionTimeout(10000, TimeUnit.MILLISECONDS)
       .build()
   }
@@ -32,19 +32,19 @@ object MacrometaPulsarClientInstance {
   def getInstance(
       federation: String,
       port: String,
-      jwtToken: String
+      apikey: String
   ): MacrometaPulsarClientInstance = {
     val pulsarUrl = s"pulsar+ssl://api-$federation:$port"
-    instances.get((federation, port, jwtToken)) match {
+    instances.get((federation, port, apikey)) match {
       case Some(client) => client
       case None =>
         synchronized {
-          instances.get((federation, port, jwtToken)) match {
+          instances.get((federation, port, apikey)) match {
             case Some(client) => client
             case None =>
               val newInstance =
-                new MacrometaPulsarClientInstance(pulsarUrl, jwtToken)
-              instances((federation, port, jwtToken)) = newInstance
+                new MacrometaPulsarClientInstance(pulsarUrl, apikey)
+              instances((federation, port, apikey)) = newInstance
               newInstance
           }
         }

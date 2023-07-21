@@ -3,6 +3,7 @@
 app/.DS_Store
 # Ignore Gradle build output directory
 build
+bin
 checkpoint
 .idea
 .scalafmt.conf

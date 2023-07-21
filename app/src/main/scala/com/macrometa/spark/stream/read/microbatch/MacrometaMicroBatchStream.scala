@@ -10,19 +10,10 @@ import com.macrometa.spark.stream.read.MacrometaInputPartition
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.apache.pulsar.client.api.{
-  Consumer,
-  MessageId,
-  PulsarClient,
-  SubscriptionType,
-  Schema => PulsarSchema
-}
+import org.apache.pulsar.client.api.{Consumer, MessageId, PulsarClient, SubscriptionInitialPosition, SubscriptionType, Schema => PulsarSchema}
 import org.apache.pulsar.client.impl.MessageIdImpl
 import org.apache.spark.sql.connector.read.streaming.{MicroBatchStream, Offset}
-import org.apache.spark.sql.connector.read.{
-  InputPartition,
-  PartitionReaderFactory
-}
+import org.apache.spark.sql.connector.read.{InputPartition, PartitionReaderFactory}
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
@@ -36,7 +27,7 @@ class MacrometaMicroBatchStream(
     .getInstance(
       federation = options.get("regionUrl"),
       port = options.getOrDefault("port", 6651.toString),
-      jwtToken = options.get("token")
+      apikey = options.get("apikey")
     )
     .getClient
   val topic: String = new MacrometaUtils().createTopic(options)
@@ -44,21 +35,21 @@ class MacrometaMicroBatchStream(
     .newConsumer[Array[Byte]](PulsarSchema.BYTES)
     .topic(topic)
     .subscriptionName(options.get("subscriptionName"))
+    .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
     .subscriptionType(SubscriptionType.Shared)
     .subscribe()
   @volatile private var lastAckedMessageId: Option[MessageId] = None
 
-  private def toMessageIdImpl(messageId: MessageId): MessageIdImpl = {
+  private def toMessageIdImpl(messageId: Option[MessageId]): MessageIdImpl = {
     val messageIdString = messageId.toString
     val Array(ledgerId, entryId, partitionIndex) =
-      messageIdString.split(":").map(_.toLong)
+      messageIdString.stripPrefix("Some(").stripSuffix(")").split(":").map(_.toLong)
     new MessageIdImpl(ledgerId, entryId, partitionIndex.toInt)
   }
 
   override def latestOffset(): Offset = {
-
     val messageId = consumer.getLastMessageId
-    val messageIdImpl = toMessageIdImpl(messageId)
+    val messageIdImpl = toMessageIdImpl(Option(messageId))
     MacrometaOffset(messageIdImpl)
   }
 
@@ -77,8 +68,8 @@ class MacrometaMicroBatchStream(
   }
 
   override def initialOffset(): Offset = {
-    val earliestMessageId = MessageId.earliest
-    val messageIdImpl = toMessageIdImpl(earliestMessageId)
+    val earliestMessageId: MessageId = MessageId.earliest
+    val messageIdImpl = toMessageIdImpl(Option(earliestMessageId))
     MacrometaOffset(messageIdImpl)
   }
 
