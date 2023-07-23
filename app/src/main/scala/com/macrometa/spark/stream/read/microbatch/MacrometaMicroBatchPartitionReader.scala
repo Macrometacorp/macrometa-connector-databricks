@@ -101,24 +101,23 @@ class MacrometaMicroBatchPartitionReader(
 
   private def jsonNodeToRow(value: JsonNode, dataType: DataType): Any = {
     dataType match {
-      case StringType => UTF8String.fromString(value.asText())
-      case LongType => value.asLong()
-      case DoubleType => value.asDouble()
-      case FloatType => value.asDouble().toFloat
-      case BooleanType => value.asBoolean()
-      case NullType => if (value.isNull) None else Some(null)
+      case StringType => if (value == null) null else UTF8String.fromString(value.asText())
+      case LongType => if (value == null) null else value.asLong()
+      case DoubleType => if (value == null) null else value.asDouble()
+      case FloatType => if (value == null) null else value.asDouble().toFloat
+      case BooleanType => if (value == null) null else value.asBoolean()
+      case NullType => null
       case ArrayType(elementType, _) =>
-        if (value.isArray) {
+        if (value != null && value.isArray) {
           val arrayValues = (0 until value.size).map { i =>
             jsonNodeToRow(value.get(i), elementType)
           }.toArray
-
           new GenericArrayData(arrayValues)
         } else {
           null
         }
       case structType: StructType =>
-        if (value.isObject) {
+        if (value != null && value.isObject) {
           val values = structType.fields.map { field =>
             val fieldValue = value.get(field.name)
             jsonNodeToRow(fieldValue, field.dataType)

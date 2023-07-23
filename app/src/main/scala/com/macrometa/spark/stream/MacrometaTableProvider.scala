@@ -62,9 +62,16 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
       apikey = s"apikey ${options.get("apikey")}",
       fabric = options.get("fabric")
     )
+
     val isCollectionStream = Try(options.get("isCollectionStream").toLowerCase.toBoolean) match {
       case Success(booleanValue) => booleanValue
       case Failure(_) => false // Default value to return when the conversion fails
+    }
+
+    if (replication.equalsIgnoreCase("global") && isCollectionStream) {
+      throw new IllegalArgumentException(
+        "Invalid replication type. Collection streams are always local."
+      )
     }
 
     val streamName = if (isCollectionStream) {

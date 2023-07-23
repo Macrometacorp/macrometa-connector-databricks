@@ -9,6 +9,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
+import java.nio.charset.StandardCharsets
+import scala.annotation.tailrec
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.util.{Failure, Success, Try}
 
@@ -21,7 +23,7 @@ class MacrometaUtils {
   def createTopic(options: Map[String, String]): String = {
     val commonPrefix = s"persistent://${options("tenant")}/c8${options("replication")}.${options("fabric")}/"
 
-    val isCollectionStream = Try(options("isCollectionStream").toLowerCase.toBoolean) match {
+    val isCollectionStream = Try(options("iscollectionstream").toLowerCase.toBoolean) match {
       case Success(booleanValue) => booleanValue
       case Failure(_) => false // Default value to return when the conversion fails
     }
@@ -45,14 +47,23 @@ class MacrometaUtils {
       .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
       .subscriptionType(SubscriptionType.Shared)
       .subscribe()
-    val messageOpt: Option[Array[Byte]] =
-      Try(consumer.receive()).toOption.map(_.getValue)
+
+    @tailrec
+    def receiveNonEmptyMessage(): Option[String] = {
+      val messageOpt = Try(consumer.receive()).toOption.map(_.getValue)
+      // Convert bytes to string using UTF-8 charset
+      val messageStrOpt = messageOpt.map(bytes => new String(bytes, StandardCharsets.UTF_8).trim).filter(_.nonEmpty)
+      if (messageStrOpt.isEmpty) receiveNonEmptyMessage() // Keep on receiving until non-empty message received
+      else messageStrOpt
+    }
+
+    val messageOpt: Option[String] = receiveNonEmptyMessage()
+
     val schema = messageOpt match {
-      case Some(messageBytes) =>
-        val messageJson = new String(messageBytes)
+      case Some(messageStr) =>
         val spark = SparkSession.builder().getOrCreate()
         import spark.implicits._
-        val df = spark.read.json(Seq(messageJson).toDS)
+        val df = spark.read.json(Seq(messageStr).toDS)
         df.schema
       case None =>
         new StructType()
