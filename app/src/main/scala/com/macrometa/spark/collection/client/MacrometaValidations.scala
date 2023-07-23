@@ -4,7 +4,6 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpMethods, _}
 import io.circe.syntax.EncoderOps
 import io.circe.{Json, parser}
-import org.apache.spark.sql.SparkSession
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
@@ -62,7 +61,7 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
       val err = json.asObject.get("errorMessage").get
       val code = json.asObject.get("code").get
       throw new IllegalArgumentException(
-        s"Invalid fabric ${fabric}, error with message ${err}, Status code: ${code}"
+        s"Invalid fabric $fabric, error with message $err, Status code: $code"
       )
 
     }
@@ -76,7 +75,7 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
       val err = json.asObject.get("errorMessage").get
       val code = json.asObject.get("code").get
       throw new IllegalArgumentException(
-        s"Error with message ${err}, Status code: ${code}"
+        s"Error with message $err, Status code: $code"
       )
 
     }
@@ -89,31 +88,35 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
         )
         if (!collectionExists) {
           throw new IllegalArgumentException(
-            s"Error with collection ${collection}, does not exists."
+            s"Error with collection $collection, does not exists."
           )
         }
       case None =>
         println("result is not an array or does not exist")
     }
   }
-  def validateStream(stream: String, replicationType: String): Unit = {
+  def validateStream(stream: String, replicationType: String, isCollectionStream:Boolean = false): Unit = {
     var rep: Boolean = false
     if (replicationType.equalsIgnoreCase("global")) {
       rep = true
     }
-    val response = request(HttpMethods.GET, s"streams?global=${rep}", fabric)
+    val response = request(HttpMethods.GET, s"streams?global=$rep", fabric)
     val obj = parser.parse(response.value.get.get)
     val json: Json = obj.getOrElse(Json.Null)
     if (json.asObject.get("error").get.asBoolean.get) {
       val err = json.asObject.get("errorMessage").get
       val code = json.asObject.get("code").get
       throw new IllegalArgumentException(
-        s"Error with message ${err}, Status code: ${code}"
+        s"Error with message $err, Status code: $code"
       )
     }
 
     val resultArray = json.asObject.get("result").flatMap(_.asArray)
-
+    val streamName = if (isCollectionStream) {
+      stream
+    } else {
+      s"c8${replicationType}s.$stream"
+    }
     resultArray match {
       case Some(array) =>
         val streamExists = array.exists(jsonObj =>
@@ -121,11 +124,11 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
             .get("topic")
             .get
             .asString
-            .get == s"c8${replicationType}s.${stream}"
+            .get == streamName
         )
         if (!streamExists) {
           throw new IllegalArgumentException(
-            s"Error with stream ${stream}, does not exists."
+            s"Error with stream $stream, does not exists."
           )
         }
       case None =>
@@ -145,13 +148,14 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
       val err = json.asObject.get("errorMessage").get
       val code = json.asObject.get("code").get
       throw new IllegalArgumentException(
-        s"Error with message for wrong query:  ${err}, Status code: ${code}"
+        s"Error with message for wrong query:  $err, Status code: $code"
       )
     }
   }
 
   def validateAPiKeyPermissions(
-      collection: String,
+      collection: String = "",
+      stream: String = "",
       accessLevels: Array[String]
   ): Unit = {
     val words = apikey.split("\\.")
@@ -160,21 +164,33 @@ class MacrometaValidations(federation: String, apikey: String, fabric: String) {
     val idPattern = "^[a-zA-Z][a-zA-Z0-9_]*$"
     if (!apikeyId.matches(idPattern)) {
       throw new IllegalArgumentException(
-        s"Invalid ApikeyId ${apikeyId} detected in Apikey."
+        s"Invalid ApikeyId $apikeyId detected in Apikey."
       )
     }
 
-    val response = request(
-      HttpMethods.GET,
-      s"key/${apikeyId}/database/${fabric}/collection/${collection}"
-    )
+    if (collection.isEmpty && stream.isEmpty) {
+      throw new IllegalArgumentException("Collection/stream name not provided or it is empty.")
+    }
+
+    val response = if (collection.nonEmpty) {
+      request(
+        HttpMethods.GET,
+        s"key/$apikeyId/database/$fabric/collection/$collection"
+      )
+    } else {
+      request(
+        HttpMethods.GET,
+        s"key/$apikeyId/database/$fabric/stream/$stream"
+      )
+    }
+
     val obj = parser.parse(response.value.get.get)
     val json: Json = obj.getOrElse(Json.Null)
     if (json.asObject.get("error").get.asBoolean.get) {
       val err = json.asObject.get("errorMessage").get
       val code = json.asObject.get("code").get
       throw new IllegalArgumentException(
-        s"Error with message for wrong apikey:  ${err}, Status code: ${code}"
+        s"Error with message for wrong apikey:  $err, Status code: $code"
       )
     }
     json.asObject.flatMap(_("result")).flatMap(_.asString) match {

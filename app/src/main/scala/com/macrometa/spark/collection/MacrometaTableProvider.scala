@@ -44,14 +44,6 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
     val requiredProperties = Seq("regionUrl", "apiKey", "fabric", "collection")
     val collection = options.get("collection")
     val defaultQuery = s"FOR doc IN $collection RETURN doc"
-
-    val batchSize = options.getOrDefault("batchSize", "100").toInt
-    if (batchSize <= 1 || batchSize >= 10000) {
-      throw new IllegalArgumentException(
-        "Batch size should be greater than 0 and less or equal to 10000"
-      )
-    }
-
     requiredProperties.foreach { propName =>
       val propValue = options.get(propName)
       if (propValue == null || propValue.isEmpty) {

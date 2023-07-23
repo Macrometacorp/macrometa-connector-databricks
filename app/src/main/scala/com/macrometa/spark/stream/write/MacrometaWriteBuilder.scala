@@ -13,6 +13,7 @@ class MacrometaWriteBuilder(
     options: CaseInsensitiveStringMap,
     schema: StructType
 ) extends WriteBuilder {
-  override def buildForStreaming(): StreamingWrite =
+  override def buildForStreaming(): StreamingWrite = {
     new MacrometaStreamingWrite(options, schema)
+  }
 }

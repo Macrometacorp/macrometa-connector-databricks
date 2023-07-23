@@ -21,6 +21,12 @@ class MacrometaWriteBuilder(
     with Logging {
 
   override def buildForBatch(): BatchWrite = {
+    val batchSize = options.getOrDefault("batchSize", "100").toInt
+    if (batchSize < 1 || batchSize > 10000) {
+      throw new IllegalArgumentException(
+        "Batch size should be greater than 0 and less or equal to 10000"
+      )
+    }
     new MacrometaBatchWriter(options, schema)
   }
 

@@ -18,7 +18,7 @@ In this example we want to show you how to read data from a Macrometa Stream and
 val sourceOptions = Map(
   "regionUrl" -> regionUrl,
   "port" -> "6651",
-  "token" -> authToken,
+  "apikey" -> apikey,
   "fabric" -> fabric,
   "tenant" -> tenant,
   "replication" -> replication,

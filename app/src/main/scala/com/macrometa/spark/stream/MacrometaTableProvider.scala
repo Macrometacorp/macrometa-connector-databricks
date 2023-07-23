@@ -14,6 +14,7 @@ import org.apache.spark.sql.sources.DataSourceRegister
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
+import scala.util.{Failure, Success, Try}
 import java.util
 
 class MacrometaTableProvider extends TableProvider with DataSourceRegister {
@@ -31,7 +32,7 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
   override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
     val requiredProperties = Seq(
       "regionUrl",
-      "token",
+      "apikey",
       "fabric",
       "tenant",
       "stream",
@@ -46,7 +47,7 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
       }
     }
 
-    val replication = options.getOrDefault("replication", "global")
+    val replication = options.get("replication")
     if (
       !(replication
         .equalsIgnoreCase("global") || replication.equalsIgnoreCase("local"))
@@ -58,20 +59,42 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
 
     val macrometaClient = new MacrometaValidations(
       federation = options.get("regionUrl"),
-      apikey = s"bearer ${options.get("token")}",
+      apikey = s"apikey ${options.get("apikey")}",
       fabric = options.get("fabric")
+    )
+
+    val isCollectionStream = Try(options.get("isCollectionStream").toLowerCase.toBoolean) match {
+      case Success(booleanValue) => booleanValue
+      case Failure(_) => false // Default value to return when the conversion fails
+    }
+
+    if (replication.equalsIgnoreCase("global") && isCollectionStream) {
+      throw new IllegalArgumentException(
+        "Invalid replication type. Collection streams are always local."
+      )
+    }
+
+    val streamName = if (isCollectionStream) {
+      options.get("stream")
+    } else {
+      s"c8${options.get("replication")}s.${options.get("stream")}"
+    }
+    macrometaClient.validateAPiKeyPermissions(
+      stream = streamName,
+      accessLevels = Array("rw", "ro")
     )
     macrometaClient.validateFabric()
     macrometaClient.validateStream(
       options.get("stream"),
-      options.get("replication")
+      options.get("replication"),
+      isCollectionStream
     )
 
     val client: PulsarClient = MacrometaPulsarClientInstance
       .getInstance(
         federation = options.get("regionUrl"),
         port = options.getOrDefault("port", 6651.toString),
-        jwtToken = options.get("token")
+        apikey = options.get("apikey")
       )
       .getClient
     new MacrometaUtils().inferSchema(client = client, options = options)

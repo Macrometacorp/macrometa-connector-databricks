@@ -13,16 +13,18 @@ object ReadFromStreamWriteToCollection extends App {
   val tenant = "<YOUR_TENANT>"
   val replication = "global"
   val sourceStream = "<SOURCE_SAMPLE_STREAM_NAME>"
-  val authToken = ""
+  val apikey = "<YOUR_APIKEY>"
+  val isCollectionStream = "false"
   val sourceSubscription = "test-subscription-123"
 
   val sourceOptions = Map(
     "regionUrl" -> regionUrl,
-    "token" -> authToken,
+    "apikey" -> apikey,
     "fabric" -> fabric,
     "tenant" -> tenant,
     "replication" -> replication,
     "stream" -> sourceStream,
+    "isCollectionStream" -> isCollectionStream,
     "subscriptionName" -> sourceSubscription
   )
 
@@ -40,7 +42,7 @@ object ReadFromStreamWriteToCollection extends App {
 
   val targetOptions = Map(
     "regionUrl" -> regionUrl,
-    "apiKey" -> "apikey ",
+    "apiKey" -> s"apikey $apikey",
     "fabric" -> fabric,
     "collection" -> "<YOUR_TARGET_COLLECTION>",
     "batchSize" -> 100.toString,

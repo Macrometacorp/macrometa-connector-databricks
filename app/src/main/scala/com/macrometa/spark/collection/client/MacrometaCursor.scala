@@ -106,7 +106,6 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String) {
   }
 
   private def findMostCommonSchema(schemas: Seq[StructType]): StructType = {
-    println(schemas)
     if (schemas.isEmpty) {
       new StructType()
     } else {
@@ -162,9 +161,15 @@ class MacrometaCursor(federation: String, apikey: String, fabric: String) {
           .map(entity => entity.data.utf8String),
         timeout
       )
-
       val jsonCursor: Json = parser.parse(resCursor).getOrElse(null)
 
+      if (jsonCursor.asObject.get("error").get.asBoolean.get) {
+        val err = jsonCursor.asObject.get("errorMessage").get
+        val code = jsonCursor.asObject.get("code").get
+        throw new RuntimeException(
+          s"Error with message ${err}, Status code: ${code}"
+        )
+      }
       id = jsonCursor.hcursor.downField("id").focus.flatMap(_.asString)
       hasMore = jsonCursor.hcursor
         .downField("hasMore")
