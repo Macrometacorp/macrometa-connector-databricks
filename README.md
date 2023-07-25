@@ -20,23 +20,18 @@ The Streaming Data Connector handles real-time data streams, while the Collectio
 
 - When mapping from a Macrometa Array to Spark Array, we are using ArrayType which is a collection data type that extends the DataType class which is a superclass of all types in PySpark. All elements of ArrayType should have the same type of elements.
 - When inferring schema, the connector retrieves the first 50 documents from a collection and chooses the most common one between them
+
+
 ## How to install the Macrometa Databricks Connector
 
-1. Clone the Macrometa Spark Streaming Connector project from GitHub:
+1. You need to get the JAR file for the connector. You can do that by two ways:
+    1. Using the official github package released for this repository and directly downloading the JAR file asset from there for example:
+    app-0.0.1.jar
+    2. Using the latest code in master branch (Not a recommended way since this code might not be officialy released), by cloning the repository (git clone https://github.com/Macrometacorp/macrometa-connector-databricks.git) and building the JAR file using Gradle from the root of this project folder using command: ./gradlew clean shadowJar
 
-- git clone https://github.com/Macrometacorp/macrometa-connector-databricks.git
+2. The generated JAR file named 'macrometa-connector-databricks.jar' will be located in the `app/build/libs` directory. Upload the JAR file to your Databricks workspace using the [Databricks CLI](https://docs.databricks.com/dev-tools/cli/index.html) or the Databricks UI.
 
-2. Change to the project directory:
-
-- cd macrometa-connector-databricks
-
-3. Build the connector JAR using Gradle:
-
-- ./gradlew clean shadowJar
-
-4. The generated JAR file named 'macrometa-connector-databricks.jar' will be located in the `app/build/libs` directory. Upload the JAR file to your Databricks workspace using the [Databricks CLI](https://docs.databricks.com/dev-tools/cli/index.html) or the Databricks UI.
-
-5. Attach the JAR file to your Databricks cluster by following the instructions in the [Databricks documentation](https://docs.databricks.com/libraries/cluster-libraries.html#install-a-library-on-a-cluster).
+3. Attach the JAR file to your Databricks cluster by following the instructions in the [Databricks documentation](https://docs.databricks.com/libraries/cluster-libraries.html#install-a-library-on-a-cluster).
 
 ## How to use the Macrometa Databricks Connector
 
