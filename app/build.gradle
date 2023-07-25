@@ -27,9 +27,8 @@ publishing {
         }
     }
     publications {
-        gpr(MavenPublication) {
-            from(components.java)
-            artifact tasks.shadowJar // Use the shadowJar task to publish the Uber JAR
+        shadow(MavenPublication) { publication ->
+            from project.shadow.component(publication)
         }
     }
 }
