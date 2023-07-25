@@ -27,15 +27,8 @@ publishing {
         }
     }
     publications {
-        shadow(MavenPublication) {
-            from(components.java)
-            artifact tasks.shadowJar // Use the shadowJar task to publish the Uber JAR
-
-            // Exclude the default jar artifact to avoid conflicts
-            artifactId = 'macrometa-connector-databricks-shadow'
-            artifact(tasks.shadowJar) {
-                builtBy tasks.shadowJar
-            }
+        shadow(MavenPublication) { publication ->
+            from project.shadow.component(publication)
         }
     }
 }
