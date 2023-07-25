@@ -29,6 +29,10 @@ publishing {
     publications {
         shadow(MavenPublication) { publication ->
             from project.shadow.component(publication)
+            artifactId = 'macrometa-connector-databricks-shadow'
+            artifact(tasks.shadowJar) {
+                builtBy tasks.shadowJar
+            }
         }
     }
 }
