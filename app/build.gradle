@@ -12,6 +12,26 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id 'maven-publish'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/Macrometacorp/macrometa-connector-databricks")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        gpr(MavenPublication) {
+            from(components.java)
+            artifact tasks.shadowJar // Use the shadowJar task to publish the Uber JAR
+        }
+    }
 }
 
 repositories {
@@ -19,9 +39,8 @@ repositories {
     mavenCentral()
 }
 shadowJar {
-    archiveBaseName.set('macrometa-spark-dataconnector')
+    archiveBaseName.set('macrometa-connector-databricks')
     archiveClassifier.set('')
-    archiveVersion.set('')
     relocate 'com.typesafe.config', 'shaded.com.typesafe.config'
     relocate 'shapeless', 'shaded.shapeless'
 
