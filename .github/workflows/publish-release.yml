@@ -3,9 +3,6 @@ name: Macrometa Connector Databricks Release
 on:
   workflow_dispatch:
     inputs:
-      releaseBranch:
-        description: 'Release from branch'
-        required: true
       releaseVersion:
         description: 'Version to be released. (format - x.y.z)'
         required: true
@@ -16,14 +13,13 @@ jobs:
 
     steps:
       - name: Checkout latest code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '8' # Java 8
           distribution: 'temurin' # Use Temurin for Java 8
-          distribution-type: 'jdk' # Specify 'jdk' as the distribution type for Java 8
 
       - name: Build and Publish JAR using Gradle
         env:
