@@ -34,3 +34,16 @@ jobs:
           NEW_VERSION=${{ env.input_version }}
           echo "New version: ${NEW_VERSION}"
           ./gradlew -Pversion=${NEW_VERSION} publish
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tag_name: v${{ github.event.inputs.releaseVersion }}
+          release_name: Release ${{ github.event.inputs.releaseVersion }}
+          body: |
+            Release version ${{ github.event.inputs.releaseVersion }}
+          draft: false
+          prerelease: false
