@@ -24,10 +24,12 @@ The Streaming Data Connector handles real-time data streams, while the Collectio
 
 ## How to install the Macrometa Databricks Connector
 
-1. You need to get the JAR file for the connector. You can do that by two ways:
-    1. Using the official github package released for this repository and directly downloading the JAR file asset from there for example:
-    app-0.0.1.jar
-    2. Using the latest code in master branch (Not a recommended way since this code might not be officialy released), by cloning the repository (git clone https://github.com/Macrometacorp/macrometa-connector-databricks.git) and building the JAR file using Gradle from the root of this project folder using command: ./gradlew clean shadowJar
+1. Obtain the JAR file. You can obtain the JAR file for the connector through either of the following methods:
+
+a. Using the Official GitHub Package: Download the pre-built JAR file from the official GitHub package for this repository. For example: app-0.0.1.jar. This is the recommended way for production usage.
+
+b. Building from Source: Clone this repository by running git clone https://github.com/Macrometacorp/macrometa-connector-databricks.git, and then build the JAR file using Gradle. Open a terminal in the root folder of the project and execute the command: ./gradlew clean shadowJar. This method provides the latest code, but it may not be officially released, so it's not recommended for production environments.
+
 
 2. The generated JAR file named 'macrometa-connector-databricks.jar' will be located in the `app/build/libs` directory. Upload the JAR file to your Databricks workspace using the [Databricks CLI](https://docs.databricks.com/dev-tools/cli/index.html) or the Databricks UI.
 
