@@ -59,7 +59,7 @@ dependencies {
     def circeVersion = '0.14.0-M1'
     def sparkVersion = '3.3.0'
     def slf4jVersion = '1.7.32'
-    def log4jVersion = '2.14.1'
+    def log4jVersion = '2.17.2'
 
     def shapelessVersion = '2.3.3' // Set the Shapeless version
     implementation "com.chuusai:shapeless_2.12:$shapelessVersion"
