@@ -23,6 +23,7 @@ val sourceOptions = Map(
   "tenant" -> tenant,
   "replication" -> replication,
   "stream" -> sourceStream,
+  "isCollectionStream" -> "false", // Indicates if this is a collection stream (true) or not (false), represented as a string value
   "subscriptionName" -> sourceSubscription
 )
 ```
