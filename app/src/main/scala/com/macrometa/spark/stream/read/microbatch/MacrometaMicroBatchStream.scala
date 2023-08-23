@@ -50,8 +50,6 @@ class MacrometaMicroBatchStream(
         (ledger, entry, partition)
       case Array(ledger, entry) =>
         (ledger, entry, 0L)
-      case Array(ledger) =>
-        (ledger, 0L, 0L)
       case _ =>
         throw new RuntimeException(s"Invalid messageId received: $messageIdString")
     }
