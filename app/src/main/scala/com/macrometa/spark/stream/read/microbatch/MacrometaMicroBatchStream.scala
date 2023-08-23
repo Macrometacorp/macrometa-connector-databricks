@@ -42,8 +42,18 @@ class MacrometaMicroBatchStream(
 
   private def toMessageIdImpl(messageId: Option[MessageId]): MessageIdImpl = {
     val messageIdString = messageId.toString
-    val Array(ledgerId, entryId, partitionIndex) =
-      messageIdString.stripPrefix("Some(").stripSuffix(")").split(":").map(_.toLong)
+    val strippedMessageIdString = messageIdString.stripPrefix("Some(").stripSuffix(")")
+    val components = strippedMessageIdString.split(":").map(_.toLong)
+
+    val (ledgerId, entryId, partitionIndex) = components match {
+      case Array(ledger, entry, partition, _*) =>
+        (ledger, entry, partition)
+      case Array(ledger, entry) =>
+        (ledger, entry, 0L)
+      case _ =>
+        throw new RuntimeException(s"Invalid messageId received: $messageIdString")
+    }
+
     new MessageIdImpl(ledgerId, entryId, partitionIndex.toInt)
   }
 
