@@ -28,18 +28,31 @@ val sourceOptions = Map(
 2. Create a spark session:
 ```scala
 val spark = SparkSession.builder()
-  .appName("MacrometaStreamingApp")
+  .appName("MacrometaCollectionApp")
   .master("local[*]")
   .getOrCreate()
 ```
-3. Read from the Macrometa stream:
-```scala
-val inputDF = spark
-  .read
-  .format("com.macrometa.spark.collection.MacrometaTableProvider")
-  .options(sourceOptions)
-  .load()
-````
+3. Read from the Macrometa collection:
+
+   1. Auto infer schema:
+   ```scala
+    val inputDF = spark
+        .read
+        .format("com.macrometa.spark.collection.MacrometaTableProvider")
+        .options(sourceOptions)
+        .load()
+    ```
+   2. User defined schema:
+    ```scala
+    val userSchema = new StructType().add("value", "string")
+    val inputDF = spark
+        .read
+        .format("com.macrometa.spark.collection.MacrometaTableProvider")
+        .options(sourceOptions)
+        .schema(userSchema)
+        .load()
+    ```
+
 4. Show the read results(only 20 rows)
 ```scala
    inputDF.show()

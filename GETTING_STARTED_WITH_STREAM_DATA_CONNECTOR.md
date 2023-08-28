@@ -36,12 +36,24 @@ val spark = SparkSession.builder()
   .getOrCreate()
 ```
 3. Read from the Macrometa stream:
-```scala
-val inputStream = spark.readStream
-  .format("com.macrometa.spark.stream.MacrometaTableProvider")
-  .options(sourceOptions)
-  .load()
-````
+   1. Auto infer schema:
+    ```scala
+    val inputStream = spark.readStream
+        .format("com.macrometa.spark.stream.MacrometaTableProvider")
+        .options(sourceOptions)
+        .load()
+    ```
+
+    2. User defined schema:
+    ```scala
+    val userSchema = new StructType().add("name", "string").add("age", "integer")
+    val inputStream = spark.readStream
+        .format("com.macrometa.spark.stream.MacrometaTableProvider")
+        .options(sourceOptions)
+        .schema(userSchema)
+        .load()
+    ```
+
 ### Writing to a Macrometa Stream
 1. Set up your target options:
 ```scala
@@ -58,8 +70,8 @@ val targetOptions = Map(
 ```
 2. Write to the Macrometa stream (Assuming the stream you are reading data from has the property 'symbol', 'ma'. Replace with your own schema:
 ```scala
-  val query = inputStream.select("symbol","ma")
-  .withColumnRenamed("ma", "value")
+  val query = inputStream.select("name","age")
+  .withColumnRenamed("name", "userName")
   .writeStream
   .format("com.macrometa.spark.stream.MacrometaTableProvider")
   .options(targetOptions)

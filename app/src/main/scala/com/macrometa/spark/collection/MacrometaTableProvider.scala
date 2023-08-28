@@ -40,6 +40,8 @@ class MacrometaTableProvider extends TableProvider with DataSourceRegister {
 
   override def shortName(): String = "macrometa"
 
+  override def supportsExternalMetadata(): Boolean = true
+
   override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
     val requiredProperties = Seq("regionUrl", "apiKey", "fabric", "collection")
     val collection = options.get("collection")
