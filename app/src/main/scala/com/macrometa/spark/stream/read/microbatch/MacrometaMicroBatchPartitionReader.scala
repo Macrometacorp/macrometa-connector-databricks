@@ -9,7 +9,7 @@ import com.macrometa.spark.stream.pulsar.macrometa_utils.MacrometaUtils
 import com.macrometa.spark.stream.read.MacrometaInputPartition
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read.PartitionReader
-import org.apache.spark.sql.types.{ArrayType, BooleanType, DataType, DoubleType, FloatType, LongType, NullType, StringType, StructType}
+import org.apache.spark.sql.types.{ArrayType, BooleanType, DataType, DoubleType, FloatType, IntegerType, LongType, NullType, StringType, StructType}
 import org.apache.pulsar.shade.com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import org.apache.pulsar.client.api.{Consumer, Message, PulsarClient, SubscriptionInitialPosition, SubscriptionType, Schema => PulsarSchema}
 import org.apache.pulsar.client.impl.MessageIdImpl
@@ -102,6 +102,7 @@ class MacrometaMicroBatchPartitionReader(
   private def jsonNodeToRow(value: JsonNode, dataType: DataType): Any = {
     dataType match {
       case StringType => if (value == null) null else UTF8String.fromString(value.asText())
+      case IntegerType => if (value == null) null else value.asInt()
       case LongType => if (value == null) null else value.asLong()
       case DoubleType => if (value == null) null else value.asDouble()
       case FloatType => if (value == null) null else value.asDouble().toFloat
